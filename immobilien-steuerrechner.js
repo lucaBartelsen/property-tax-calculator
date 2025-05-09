@@ -1,8 +1,7 @@
 // Aktualisierte Funktion zur Berechnung der Einkommensteuer nach deutschem Recht
 function calculateGermanIncomeTax(income) {
     // Einkommensteuer für 2024 mit den aktuellen Formeln
-    // Quelle: Vom Nutzer bereitgestellte Formeln
-
+    
     // Variablen für die Steuerformel
     let tax = 0;
     
@@ -55,91 +54,119 @@ function formatPercentage(value) {
     return new Intl.NumberFormat('de-DE', { style: 'percent', minimumFractionDigits: 2 }).format(value / 100);
 }
 
-// Tab functionality
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        const tabId = tab.getAttribute('data-tab');
-        
-        // Remove active class from all tabs and contents
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        // Add active class to current tab and content
-        tab.classList.add('active');
-        document.getElementById(tabId).classList.add('active');
+// Chart.js spezifische Umgebungsvariable
+let cashflowChart = null;
+
+// Document ready function
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab functionality
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabId = tab.getAttribute('data-tab');
+            
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Add active class to current tab and content
+            tab.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        });
     });
+
+    // Update Grunderwerbsteuer based on Bundesland selection
+    document.getElementById('bundesland').addEventListener('change', function() {
+        document.getElementById('grunderwerbsteuer').value = this.value;
+    });
+
+    // Initial set of Grunderwerbsteuer
+    document.getElementById('grunderwerbsteuer').value = document.getElementById('bundesland').value;
+
+    // Handle financing type change
+    document.getElementById('financing-type').addEventListener('change', function() {
+        const loanDetails = document.getElementById('loan-details');
+        if (this.value === 'loan') {
+            loanDetails.style.display = 'block';
+        } else {
+            loanDetails.style.display = 'none';
+        }
+    });
+
+    // Event-Listener für Grundstücksanteil hinzufügen
+    document.getElementById('land-value-percentage').addEventListener('input', function() {
+        const landValuePercentage = parseFloat(this.value);
+        if (!isNaN(landValuePercentage)) {
+            const buildingValuePercentage = 100 - landValuePercentage;
+            document.getElementById('building-value-percentage').value = buildingValuePercentage.toFixed(1);
+        }
+    });
+
+    // Hauptberechnungsfunktion - alle Berechnungen in einem
+    document.getElementById('calculate-all').addEventListener('click', function() {
+        calculatePurchase();
+        calculateOngoing();
+        calculateCashflow();
+        calculateYearTable();
+        calculateSummary();
+        
+        // Nach Berechnungen automatisch zur Übersicht wechseln
+        document.querySelector('.tab[data-tab="overview"]').click();
+    });
+
+    // Jahr-Tabelle aufklappbare Zeilen
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.closest('.main-row')) {
+            const row = e.target.closest('.main-row');
+            if (row.querySelector('.expand-indicator')) {
+                toggleDetails(row);
+            }
+        }
+    });
+
+    // Funktionen für "Alle aufklappen" und "Alle zuklappen" Buttons
+    document.getElementById('expand-all').addEventListener('click', function() {
+        document.querySelectorAll('.main-row').forEach(row => {
+            // Nur Zeilen mit expand-indicator sind aufklappbar
+            if (row.querySelector('.expand-indicator')) {
+                const category = row.getAttribute('data-category');
+                const detailRows = document.querySelectorAll(`.detail-row[data-category="${category}"]`);
+                
+                row.classList.add('expanded');
+                detailRows.forEach(detailRow => detailRow.classList.add('visible'));
+            }
+        });
+    });
+
+    document.getElementById('collapse-all').addEventListener('click', function() {
+        document.querySelectorAll('.main-row').forEach(row => {
+            // Nur Zeilen mit expand-indicator sind aufklappbar
+            if (row.querySelector('.expand-indicator')) {
+                const category = row.getAttribute('data-category');
+                const detailRows = document.querySelectorAll(`.detail-row[data-category="${category}"]`);
+                
+                row.classList.remove('expanded');
+                detailRows.forEach(detailRow => detailRow.classList.remove('visible'));
+            }
+        });
+    });
+
+    // Export der Tabelle als CSV
+    document.getElementById('export-table').addEventListener('click', function() {
+        if (!window.yearlyData) {
+            alert('Bitte berechnen Sie zuerst die Tabelle!');
+            return;
+        }
+        
+        exportTableToCSV();
+    });
+    
+    // Beim Laden der Seite automatisch die ersten Berechnungen durchführen
+    calculatePurchase();
+    calculateOngoing();
 });
 
-// Update Grunderwerbsteuer based on Bundesland selection
-document.getElementById('bundesland').addEventListener('change', function() {
-    document.getElementById('grunderwerbsteuer').value = this.value;
-});
-
-// Initial set of Grunderwerbsteuer
-document.getElementById('grunderwerbsteuer').value = document.getElementById('bundesland').value;
-
-// Handle financing type change
-document.getElementById('financing-type').addEventListener('change', function() {
-    const loanDetails = document.getElementById('loan-details');
-    if (this.value === 'loan') {
-        loanDetails.style.display = 'block';
-    } else {
-        loanDetails.style.display = 'none';
-    }
-});
-
-// Event-Listener für Grundstücksanteil hinzufügen
-document.getElementById('land-value-percentage').addEventListener('input', function() {
-    const landValuePercentage = parseFloat(this.value);
-    if (!isNaN(landValuePercentage)) {
-        const buildingValuePercentage = 100 - landValuePercentage;
-        document.getElementById('building-value-percentage').value = buildingValuePercentage.toFixed(1);
-    }
-});
-
-// Calculate Purchase Tab
-document.getElementById('calculate-purchase').addEventListener('click', function() {
-    const purchasePrice = parseFloat(document.getElementById('purchase-price').value);
-    const grunderwerbsteuerRate = parseFloat(document.getElementById('grunderwerbsteuer').value);
-    const notaryRate = parseFloat(document.getElementById('notary-costs').value);
-    const brokerRate = parseFloat(document.getElementById('broker-fee').value);
-    
-    const grunderwerbsteuer = purchasePrice * (grunderwerbsteuerRate / 100);
-    const notaryCosts = purchasePrice * (notaryRate / 100);
-    const brokerFee = purchasePrice * (brokerRate / 100);
-    const totalExtra = grunderwerbsteuer + notaryCosts + brokerFee;
-    const totalCost = purchasePrice + totalExtra;
-    
-    // Kaufpreisaufteilung berechnen
-    const landValuePercentage = parseFloat(document.getElementById('land-value-percentage').value);
-    const buildingValuePercentage = parseFloat(document.getElementById('building-value-percentage').value);
-    const maintenanceCost = parseFloat(document.getElementById('maintenance-cost').value);
-    const furnitureValue = parseFloat(document.getElementById('furniture-value').value);
-    const maintenanceDistribution = parseInt(document.getElementById('maintenance-distribution').value);
-    
-    const landValue = purchasePrice * (landValuePercentage / 100);
-    const buildingValue = purchasePrice * (buildingValuePercentage / 100);
-    const annualMaintenance = maintenanceCost / maintenanceDistribution;
-    
-    // Kaufpreisaufteilung anzeigen
-    document.getElementById('result-purchase-price').textContent = formatCurrency(purchasePrice);
-    document.getElementById('result-grunderwerbsteuer').textContent = formatCurrency(grunderwerbsteuer);
-    document.getElementById('result-notary').textContent = formatCurrency(notaryCosts);
-    document.getElementById('result-broker').textContent = formatCurrency(brokerFee);
-    document.getElementById('result-total-extra').textContent = formatCurrency(totalExtra);
-    document.getElementById('result-total-cost').textContent = formatCurrency(totalCost);
-    document.getElementById('result-land-value').textContent = formatCurrency(landValue);
-    document.getElementById('result-building-value').textContent = formatCurrency(buildingValue);
-    document.getElementById('result-maintenance-cost').textContent = formatCurrency(maintenanceCost);
-    document.getElementById('result-furniture-value').textContent = formatCurrency(furnitureValue);
-    document.getElementById('result-annual-maintenance').textContent = formatCurrency(annualMaintenance);
-    
-    // Gebäudewert im Cashflow-Tab aktualisieren
-    document.getElementById('building-value').value = buildingValue;
-});
-
-// Calculate Ongoing Tab
-document.getElementById('calculate-ongoing').addEventListener('click', function() {
+// 2. Laufende Kosten berechnen
+function calculateOngoing() {
     const monthlyRent = parseFloat(document.getElementById('rental-income').value);
     const vacancyRate = parseFloat(document.getElementById('vacancy-rate').value);
     const propertyTax = parseFloat(document.getElementById('property-tax').value);
@@ -160,68 +187,52 @@ document.getElementById('calculate-ongoing').addEventListener('click', function(
     document.getElementById('result-maintenance').textContent = formatCurrency(maintenanceCost);
     document.getElementById('result-insurance').textContent = formatCurrency(insurance);
     document.getElementById('result-total-ongoing').textContent = formatCurrency(totalOngoing);
-});
+    
+    return {
+        monthlyRent,
+        annualRent,
+        vacancyRate,
+        effectiveRent,
+        propertyTax,
+        managementFee,
+        maintenanceCost,
+        insurance,
+        totalOngoing,
+        propertySize
+    };
+}
 
-// Cashflow calculation
-document.getElementById('calculate-cashflow').addEventListener('click', function() {
-    // Get purchase data
-    const purchasePrice = parseFloat(document.getElementById('purchase-price').value);
-    const grunderwerbsteuerRate = parseFloat(document.getElementById('grunderwerbsteuer').value);
-    const notaryRate = parseFloat(document.getElementById('notary-costs').value);
-    const brokerRate = parseFloat(document.getElementById('broker-fee').value);
+// 3. Cashflow berechnen
+function calculateCashflow() {
+    // Daten aus den vorherigen Berechnungen holen
+    const purchaseData = calculatePurchase();
+    const ongoingData = calculateOngoing();
     
-    const grunderwerbsteuer = purchasePrice * (grunderwerbsteuerRate / 100);
-    const notaryCosts = purchasePrice * (notaryRate / 100);
-    const brokerFee = purchasePrice * (brokerRate / 100);
-    const totalExtra = grunderwerbsteuer + notaryCosts + brokerFee;
-    const totalCost = purchasePrice + totalExtra;
-    
-    // Get financing data
+    // Zusätzliche Daten für die Cashflow-Berechnung
     const financingType = document.getElementById('financing-type').value;
     const downPayment = parseFloat(document.getElementById('down-payment').value);
-    const interestRate = parseFloat(document.getElementById('interest-rate').value) / 100; // Als Dezimalzahl
+    const interestRate = parseFloat(document.getElementById('interest-rate').value) / 100;
     const loanTerm = parseFloat(document.getElementById('loan-term').value);
-    const repaymentRate = parseFloat(document.getElementById('repayment-rate').value) / 100; // Als Dezimalzahl
+    const repaymentRate = parseFloat(document.getElementById('repayment-rate').value) / 100;
     
-    // Get ongoing costs data
-    const monthlyRent = parseFloat(document.getElementById('rental-income').value);
-    const vacancyRate = parseFloat(document.getElementById('vacancy-rate').value);
-    const propertyTax = parseFloat(document.getElementById('property-tax').value);
-    const managementFee = parseFloat(document.getElementById('management-fee').value);
-    const maintenanceRate = parseFloat(document.getElementById('maintenance-reserve').value);
-    const propertySize = parseFloat(document.getElementById('property-size').value);
-    const insurance = parseFloat(document.getElementById('insurance').value);
-    
-    // Zusätzliche Daten für Abschreibungen
-    const furnitureValue = parseFloat(document.getElementById('furniture-value').value || 0);
-    const furnitureDepreciationRate = parseFloat(document.getElementById('furniture-depreciation-rate').value || 10) / 100;
-    const maintenanceDistribution = parseInt(document.getElementById('maintenance-distribution').value || 1);
-    const maintenanceCost = parseFloat(document.getElementById('maintenance-cost').value || 0);
-    const annualMaintenance = maintenanceCost / maintenanceDistribution;
-    
-    // Get tax data
+    // Steuer- und Abschreibungsdaten
     const annualIncome = parseFloat(document.getElementById('annual-income').value);
     const depreciationRate = parseFloat(document.getElementById('depreciation-rate').value) / 100;
     const buildingValue = parseFloat(document.getElementById('building-value').value);
+    const furnitureValue = parseFloat(document.getElementById('furniture-value').value);
+    const furnitureDepreciationRate = parseFloat(document.getElementById('furniture-depreciation-rate').value) / 100;
     const appreciationRate = parseFloat(document.getElementById('expected-appreciation').value) / 100;
     const rentIncreaseRate = parseFloat(document.getElementById('expected-rent-increase').value) / 100;
     const calculationPeriod = parseFloat(document.getElementById('calculation-period').value);
     
-    // Calculate annual values
-    const annualRent = monthlyRent * 12;
-    const effectiveRent = annualRent * (1 - vacancyRate / 100);
-    const ongoingMaintenanceCost = maintenanceRate * propertySize;
-    const totalOngoing = propertyTax + managementFee + ongoingMaintenanceCost + insurance;
-    
-    // Calculate financing costs with Annuity
+    // Finanzierungskosten berechnen
     let loanAmount = 0;
     let annuity = 0;
     
     if (financingType === 'loan') {
-        loanAmount = totalCost - downPayment;
+        loanAmount = purchaseData.totalCost - downPayment;
         
         // Berechnung der Annuität (jährliche Rate bestehend aus Zins und Tilgung)
-        // basierend auf anfänglicher Tilgungsrate + Zinsen
         annuity = loanAmount * (interestRate + repaymentRate);
     }
     
@@ -236,10 +247,10 @@ document.getElementById('calculate-cashflow').addEventListener('click', function
     let remainingLoan = loanAmount - yearlyPrincipal;
     
     // Cashflow vor Steuern berechnen
-    const cashflowBeforeTax = effectiveRent - totalOngoing - yearlyFinancingCosts;
+    const cashflowBeforeTax = ongoingData.effectiveRent - ongoingData.totalOngoing - yearlyFinancingCosts;
     
     // Neues "Ergebnis vor Steuern" berechnen (vormals "Zu versteuerndes Einkommen")
-    const taxableIncome = cashflowBeforeTax + yearlyPrincipal - annualBuildingDepreciation - annualFurnitureDepreciation - annualMaintenance;
+    const taxableIncome = cashflowBeforeTax + yearlyPrincipal - annualBuildingDepreciation - annualFurnitureDepreciation - purchaseData.annualMaintenance;
     
     // Steuerberechnung mit progressivem Steuersatz
     const previousIncomeTax = calculateGermanIncomeTax(annualIncome);
@@ -251,26 +262,50 @@ document.getElementById('calculate-cashflow').addEventListener('click', function
     const cashflowAfterTax = cashflowBeforeTax + taxSavings;
     const monthlyCashflow = cashflowAfterTax / 12;
     
+    // Ergebnisse anzeigen im Cashflow-Tab
+    document.getElementById('result-cf-annual-rent').textContent = formatCurrency(ongoingData.effectiveRent);
+    document.getElementById('result-cf-ongoing-costs').textContent = formatCurrency(ongoingData.totalOngoing);
+    document.getElementById('result-cf-financing').textContent = formatCurrency(yearlyFinancingCosts);
+    
+    // Abschreibungsinformationen
+    document.getElementById('result-cf-building-depreciation').textContent = formatCurrency(annualBuildingDepreciation);
+    document.getElementById('result-cf-furniture-depreciation').textContent = formatCurrency(annualFurnitureDepreciation);
+    document.getElementById('result-cf-maintenance-deduction').textContent = formatCurrency(purchaseData.annualMaintenance);
+    document.getElementById('result-cf-total-depreciation').textContent = formatCurrency(annualBuildingDepreciation + annualFurnitureDepreciation + purchaseData.annualMaintenance);
+    
+    // Steuerinformationen
+    document.getElementById('result-cf-taxable-income').textContent = formatCurrency(taxableIncome);
+    document.getElementById('result-cf-previous-income').textContent = formatCurrency(annualIncome);
+    document.getElementById('result-cf-total-income').textContent = formatCurrency(totalTaxableIncome);
+    document.getElementById('result-cf-previous-tax').textContent = formatCurrency(previousIncomeTax);
+    document.getElementById('result-cf-income-tax').textContent = formatCurrency(newIncomeTax);
+    document.getElementById('result-cf-tax-savings').textContent = formatCurrency(taxSavings);
+    
+    // Cashflow-Ergebnisse
+    document.getElementById('result-cf-after-tax').textContent = formatCurrency(cashflowAfterTax);
+    document.getElementById('result-cf-monthly').textContent = formatCurrency(monthlyCashflow);
+    document.getElementById('result-cf-roi').textContent = (cashflowAfterTax / (financingType === 'loan' ? downPayment : purchaseData.totalCost) * 100).toFixed(2) + ' %';
+    
     // Prepare data for chart and detailed table
     const years = Array.from({length: calculationPeriod}, (_, i) => i + 1);
     const cashflows = [cashflowAfterTax];
-    const propertyValues = [purchasePrice];
-    const equityValues = [financingType === 'loan' ? purchasePrice - remainingLoan : purchasePrice];
+    const propertyValues = [purchaseData.purchasePrice];
+    const equityValues = [financingType === 'loan' ? purchaseData.purchasePrice - remainingLoan : purchaseData.purchasePrice];
     const loanValues = [remainingLoan];
     
     // Array für jährliche Daten initialisieren
     window.yearlyData = [{
         year: 1,
-        rent: effectiveRent,
-        ongoingCosts: totalOngoing,
+        rent: ongoingData.effectiveRent,
+        ongoingCosts: ongoingData.totalOngoing,
         interest: yearlyInterest,
         principal: yearlyPrincipal,
         payment: yearlyFinancingCosts,
         loanBalance: remainingLoan,
         buildingDepreciation: annualBuildingDepreciation,
         furnitureDepreciation: annualFurnitureDepreciation,
-        maintenanceDeduction: annualMaintenance,
-        totalDepreciation: annualBuildingDepreciation + annualFurnitureDepreciation + annualMaintenance,
+        maintenanceDeduction: purchaseData.annualMaintenance,
+        totalDepreciation: annualBuildingDepreciation + annualFurnitureDepreciation + purchaseData.annualMaintenance,
         taxableIncome: taxableIncome, // Neues "Ergebnis vor Steuern"
         previousIncome: annualIncome,
         previousTax: previousIncomeTax,
@@ -279,25 +314,25 @@ document.getElementById('calculate-cashflow').addEventListener('click', function
         taxSavings: taxSavings,
         cashflow: cashflowAfterTax,
         cashflowBeforeTax: cashflowBeforeTax, // Explizit den Cashflow vor Steuern speichern
-        propertyValue: purchasePrice,
-        equity: financingType === 'loan' ? purchasePrice - remainingLoan : purchasePrice,
-        initialEquity: financingType === 'loan' ? downPayment : purchasePrice,
+        propertyValue: purchaseData.purchasePrice,
+        equity: financingType === 'loan' ? purchaseData.purchasePrice - remainingLoan : purchaseData.purchasePrice,
+        initialEquity: financingType === 'loan' ? downPayment : purchaseData.purchasePrice,
         // Zusätzliche detaillierte Daten
-        vacancyRate: vacancyRate,
-        propertyTax: propertyTax,
-        managementFee: managementFee,
-        maintenanceReserve: ongoingMaintenanceCost,
-        insurance: insurance,
-        cashflowBeforeFinancing: effectiveRent - totalOngoing
+        vacancyRate: ongoingData.vacancyRate,
+        propertyTax: ongoingData.propertyTax,
+        managementFee: ongoingData.managementFee,
+        maintenanceReserve: ongoingData.maintenanceCost,
+        insurance: ongoingData.insurance,
+        cashflowBeforeFinancing: ongoingData.effectiveRent - ongoingData.totalOngoing
     }];
     
     // Berechnung für die kommenden Jahre
-    let currentRent = effectiveRent;
-    let currentOngoingCosts = totalOngoing;
-    let currentPropertyTax = propertyTax;
-    let currentManagementFee = managementFee;
-    let currentMaintenanceReserve = ongoingMaintenanceCost;
-    let currentInsurance = insurance;
+    let currentRent = ongoingData.effectiveRent;
+    let currentOngoingCosts = ongoingData.totalOngoing;
+    let currentPropertyTax = ongoingData.propertyTax;
+    let currentManagementFee = ongoingData.managementFee;
+    let currentMaintenanceReserve = ongoingData.maintenanceCost;
+    let currentInsurance = ongoingData.insurance;
     
     for (let year = 2; year <= calculationPeriod; year++) {
         // Miet- und Kostensteigerung mit Inflationsrate
@@ -331,7 +366,7 @@ document.getElementById('calculate-cashflow').addEventListener('click', function
         const currentCashflowBeforeTax = currentCashflowBeforeFinancing - yearlyFinancingCosts;
         
         // Erhaltungsaufwand nur für die ausgewählten Jahre berücksichtigen
-        const yearlyMaintenance = year <= maintenanceDistribution ? annualMaintenance : 0;
+        const yearlyMaintenance = year <= purchaseData.maintenanceDistribution ? purchaseData.annualMaintenance : 0;
         const yearlyTotalDepreciation = annualBuildingDepreciation + annualFurnitureDepreciation + yearlyMaintenance;
         
         // Neues "Ergebnis vor Steuern" berechnen
@@ -346,7 +381,7 @@ document.getElementById('calculate-cashflow').addEventListener('click', function
         const yearlyCashflowAfterTax = currentCashflowBeforeTax + yearlyTaxSavings;
         
         // Immobilienwert berechnen
-        const yearlyPropertyValue = purchasePrice * Math.pow(1 + appreciationRate, year - 1);
+        const yearlyPropertyValue = purchaseData.purchasePrice * Math.pow(1 + appreciationRate, year - 1);
         
         // Eigenkapital berechnen
         const yearlyEquity = yearlyPropertyValue - remainingLoan;
@@ -380,9 +415,9 @@ document.getElementById('calculate-cashflow').addEventListener('click', function
             cashflowBeforeTax: currentCashflowBeforeTax, // Explizit den Cashflow vor Steuern speichern
             propertyValue: yearlyPropertyValue,
             equity: yearlyEquity,
-            initialEquity: financingType === 'loan' ? downPayment : purchasePrice,
+            initialEquity: financingType === 'loan' ? downPayment : purchaseData.purchasePrice,
             // Zusätzliche detaillierte Daten
-            vacancyRate: vacancyRate,
+            vacancyRate: ongoingData.vacancyRate,
             propertyTax: currentPropertyTax,
             managementFee: currentManagementFee,
             maintenanceReserve: currentMaintenanceReserve,
@@ -391,156 +426,12 @@ document.getElementById('calculate-cashflow').addEventListener('click', function
         });
     }
     
-    try {
-        const chartCanvas = document.getElementById('cashflowChart');
-        
-        if (!chartCanvas) {
-            console.error('Chart canvas element not found');
-            return;
-        }
-        
-        // Prüfen, ob Chart.js geladen ist
-        if (typeof Chart === 'undefined') {
-            console.error('Chart.js library not loaded');
-            return;
-        }
-        
-        // Versuche, den Kontext zu erhalten
-        let ctx;
-        try {
-            ctx = chartCanvas.getContext('2d');
-        } catch (e) {
-            console.error('Failed to get canvas context:', e);
-            return;
-        }
-        
-        // Sicheres Löschen des alten Charts
-        if (window.cashflowChart && typeof window.cashflowChart.destroy === 'function') {
-            window.cashflowChart.destroy();
-        } else if (window.cashflowChart) {
-            // Fallback, wenn destroy nicht funktioniert
-            delete window.cashflowChart;
-        }
-        
-        // Neuen Chart erstellen
-        window.cashflowChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: years,
-                datasets: [
-                    {
-                        label: 'Jährlicher Cashflow',
-                        data: cashflows,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderWidth: 2,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Immobilienwert',
-                        data: propertyValues,
-                        borderColor: 'rgba(153, 102, 255, 1)',
-                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        yAxisID: 'y1'
-                    },
-                    {
-                        label: 'Eigenkapital',
-                        data: equityValues,
-                        borderColor: 'rgba(255, 159, 64, 1)',
-                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        yAxisID: 'y1'
-                    },
-                    {
-                        label: 'Restschuld',
-                        data: loanValues,
-                        borderColor: 'rgba(231, 76, 60, 1)',
-                        backgroundColor: 'rgba(231, 76, 60, 0.2)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        yAxisID: 'y1',
-                        borderDash: [5, 5] // gestrichelte Linie für bessere Unterscheidung
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Cashflow (€)'
-                        }
-                    },
-                    y1: {
-                        position: 'right',
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Wert (€)'
-                        },
-                        grid: {
-                            drawOnChartArea: false
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Jahr'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + formatCurrency(context.raw);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    } catch (error) {
-        console.error('Error creating chart:', error);
-        // Fallback: Tabelle oder Textanzeige der Daten erstellen
-    }
-    
-    // Ergebnisse anzeigen im Cashflow-Tab
-    document.getElementById('result-cf-annual-rent').textContent = formatCurrency(effectiveRent);
-    document.getElementById('result-cf-ongoing-costs').textContent = formatCurrency(totalOngoing);
-    document.getElementById('result-cf-financing').textContent = formatCurrency(yearlyFinancingCosts);
-    
-    // Abschreibungsinformationen
-    document.getElementById('result-cf-building-depreciation').textContent = formatCurrency(annualBuildingDepreciation);
-    document.getElementById('result-cf-furniture-depreciation').textContent = formatCurrency(annualFurnitureDepreciation);
-    document.getElementById('result-cf-maintenance-deduction').textContent = formatCurrency(annualMaintenance);
-    document.getElementById('result-cf-total-depreciation').textContent = formatCurrency(annualBuildingDepreciation + annualFurnitureDepreciation + annualMaintenance);
-    
-    // Steuerinformationen
-    document.getElementById('result-cf-taxable-income').textContent = formatCurrency(taxableIncome);
-    document.getElementById('result-cf-previous-income').textContent = formatCurrency(annualIncome);
-    document.getElementById('result-cf-total-income').textContent = formatCurrency(totalTaxableIncome);
-    document.getElementById('result-cf-previous-tax').textContent = formatCurrency(previousIncomeTax);
-    document.getElementById('result-cf-income-tax').textContent = formatCurrency(newIncomeTax);
-    document.getElementById('result-cf-tax-savings').textContent = formatCurrency(taxSavings);
-    
-    // Cashflow-Ergebnisse
-    document.getElementById('result-cf-after-tax').textContent = formatCurrency(cashflowAfterTax);
-    document.getElementById('result-cf-monthly').textContent = formatCurrency(monthlyCashflow);
-    document.getElementById('result-cf-roi').textContent = (cashflowAfterTax / (financingType === 'loan' ? downPayment : totalCost) * 100).toFixed(2) + ' %';
+    // Chart erstellen
+    createCashflowChart(years, cashflows, propertyValues, equityValues, loanValues);
     
     // Store values for summary
     window.calculationResults = {
-        totalCost,
+        totalCost: purchaseData.totalCost,
         downPayment,
         loanAmount,
         annuity,
@@ -548,43 +439,22 @@ document.getElementById('calculate-cashflow').addEventListener('click', function
         monthlyCashflow,
         finalPropertyValue: propertyValues[calculationPeriod - 1],
         remainingLoan: loanValues[calculationPeriod - 1],
-        finalEquity: equityValues[calculationPeriod - 1]
+        finalEquity: equityValues[calculationPeriod - 1],
+        initialEquity: financingType === 'loan' ? downPayment : purchaseData.totalCost
     };
-});
+    
+    return window.calculationResults;
+}
 
-// Calculate Summary Tab
-document.getElementById('calculate-summary').addEventListener('click', function() {
-    if (!window.calculationResults) {
-        alert('Bitte berechnen Sie zuerst den Cashflow!');
-        return;
-    }
-    
-    const results = window.calculationResults;
-    const purchasePrice = parseFloat(document.getElementById('purchase-price').value);
-    const calculationPeriod = parseFloat(document.getElementById('calculation-period').value);
-    
-    // Calculate total ROI
-    const initialEquity = results.downPayment || results.totalCost;
-    const equityGrowth = results.finalEquity - initialEquity;
-    const annualizedROI = Math.pow(results.finalEquity / initialEquity, 1 / calculationPeriod) - 1;
-    
-    document.getElementById('summary-total-cost').textContent = formatCurrency(results.totalCost);
-    document.getElementById('summary-equity').textContent = formatCurrency(initialEquity);
-    document.getElementById('summary-loan').textContent = formatCurrency(results.loanAmount);
-    document.getElementById('summary-monthly-payment').textContent = formatCurrency(results.monthlyPayment);
-    document.getElementById('summary-monthly-cashflow').textContent = formatCurrency(results.monthlyCashflow);
-    document.getElementById('summary-final-value').textContent = formatCurrency(results.finalPropertyValue);
-    document.getElementById('summary-remaining-debt').textContent = formatCurrency(results.remainingLoan);
-    document.getElementById('summary-equity-growth').textContent = formatCurrency(equityGrowth);
-    document.getElementById('summary-total-roi').textContent = (annualizedROI * 100).toFixed(2) + ' %';
-});
-
-// Jahrestabelle berechnen und anzeigen
-document.getElementById('calculate-yeartable').addEventListener('click', function() {
+// 4. Jahrestabelle berechnen
+function calculateYearTable() {
     // Prüfen, ob die Cashflow-Berechnungen bereits durchgeführt wurden
     if (!window.yearlyData) {
-        alert('Bitte berechnen Sie zuerst den Cashflow!');
-        return;
+        calculateCashflow();
+        if (!window.yearlyData) {
+            alert('Es konnten keine Jahreswerte berechnet werden.');
+            return;
+        }
     }
     
     const table = document.getElementById('year-details-table');
@@ -720,67 +590,163 @@ document.getElementById('calculate-yeartable').addEventListener('click', functio
             row.appendChild(td);
         });
     }
-    
-    // Event-Listener für aufklappbare Zeilen hinzufügen
-    document.querySelectorAll('.main-row').forEach(row => {
-        // Bestehende Event-Listener entfernen, um Duplikate zu vermeiden
-        row.removeEventListener('click', toggleDetails);
-        
-        // Wenn die Zeile einen Pfeil-Indikator hat, dann ist sie aufklappbar
-        if (row.querySelector('.expand-indicator')) {
-            row.addEventListener('click', toggleDetails);
-        }
-    });
-    
-    function toggleDetails() {
-        const category = this.getAttribute('data-category');
-        const isExpanded = this.classList.contains('expanded');
-        const detailRows = document.querySelectorAll(`.detail-row[data-category="${category}"]`);
-        
-        if (isExpanded) {
-            this.classList.remove('expanded');
-            detailRows.forEach(row => row.classList.remove('visible'));
-        } else {
-            this.classList.add('expanded');
-            detailRows.forEach(row => row.classList.add('visible'));
+}
+
+// 5. Zusammenfassung berechnen
+function calculateSummary() {
+    if (!window.calculationResults) {
+        calculateCashflow();
+        if (!window.calculationResults) {
+            alert('Es konnten keine Ergebnisse berechnet werden.');
+            return;
         }
     }
-});
-
-// Funktionen für "Alle aufklappen" und "Alle zuklappen" Buttons
-document.getElementById('expand-all').addEventListener('click', function() {
-    document.querySelectorAll('.main-row').forEach(row => {
-        // Nur Zeilen mit expand-indicator sind aufklappbar
-        if (row.querySelector('.expand-indicator')) {
-            const category = row.getAttribute('data-category');
-            const detailRows = document.querySelectorAll(`.detail-row[data-category="${category}"]`);
-            
-            row.classList.add('expanded');
-            detailRows.forEach(detailRow => detailRow.classList.add('visible'));
-        }
-    });
-});
-
-document.getElementById('collapse-all').addEventListener('click', function() {
-    document.querySelectorAll('.main-row').forEach(row => {
-        // Nur Zeilen mit expand-indicator sind aufklappbar
-        if (row.querySelector('.expand-indicator')) {
-            const category = row.getAttribute('data-category');
-            const detailRows = document.querySelectorAll(`.detail-row[data-category="${category}"]`);
-            
-            row.classList.remove('expanded');
-            detailRows.forEach(detailRow => detailRow.classList.remove('visible'));
-        }
-    });
-});
-
-// Export der Tabelle als CSV
-document.getElementById('export-table').addEventListener('click', function() {
-    if (!window.yearlyData) {
-        alert('Bitte berechnen Sie zuerst den Cashflow!');
-        return;
-    }
     
+    const results = window.calculationResults;
+    const calculationPeriod = parseFloat(document.getElementById('calculation-period').value);
+    
+    // Calculate total ROI
+    const equityGrowth = results.finalEquity - results.initialEquity;
+    const annualizedROI = Math.pow(results.finalEquity / results.initialEquity, 1 / calculationPeriod) - 1;
+    
+    document.getElementById('summary-total-cost').textContent = formatCurrency(results.totalCost);
+    document.getElementById('summary-equity').textContent = formatCurrency(results.initialEquity);
+    document.getElementById('summary-loan').textContent = formatCurrency(results.loanAmount);
+    document.getElementById('summary-monthly-payment').textContent = formatCurrency(results.monthlyPayment);
+    document.getElementById('summary-monthly-cashflow').textContent = formatCurrency(results.monthlyCashflow);
+    document.getElementById('summary-final-value').textContent = formatCurrency(results.finalPropertyValue);
+    document.getElementById('summary-remaining-debt').textContent = formatCurrency(results.remainingLoan);
+    document.getElementById('summary-equity-growth').textContent = formatCurrency(equityGrowth);
+    document.getElementById('summary-total-roi').textContent = (annualizedROI * 100).toFixed(2) + ' %';
+}
+
+// Funktion zum Erstellen des Cashflow-Charts
+function createCashflowChart(years, cashflows, propertyValues, equityValues, loanValues) {
+    try {
+        const chartCanvas = document.getElementById('cashflowChart');
+        
+        if (!chartCanvas) {
+            console.error('Chart canvas element not found');
+            return;
+        }
+        
+        // Prüfen, ob Chart.js geladen ist
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js library not loaded');
+            return;
+        }
+        
+        // Versuche, den Kontext zu erhalten
+        let ctx;
+        try {
+            ctx = chartCanvas.getContext('2d');
+        } catch (e) {
+            console.error('Failed to get canvas context:', e);
+            return;
+        }
+        
+        // Sicheres Löschen des alten Charts
+        if (cashflowChart && typeof cashflowChart.destroy === 'function') {
+            cashflowChart.destroy();
+        } else if (cashflowChart) {
+            // Fallback, wenn destroy nicht funktioniert
+            cashflowChart = null;
+        }
+        
+        // Neuen Chart erstellen
+        cashflowChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: 'Jährlicher Cashflow',
+                        data: cashflows,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Immobilienwert',
+                        data: propertyValues,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: 'Eigenkapital',
+                        data: equityValues,
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: 'Restschuld',
+                        data: loanValues,
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        yAxisID: 'y1',
+                        borderDash: [5, 5] // gestrichelte Linie für bessere Unterscheidung
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Cashflow (€)'
+                        }
+                    },
+                    y1: {
+                        position: 'right',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Wert (€)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Jahr'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatCurrency(context.raw);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error creating chart:', error);
+    }
+}
+
+// Funktion zum Exportieren der Jahrestabelle als CSV
+function exportTableToCSV() {
     // CSV-Inhalt erstellen
     let csvContent = 'Kategorie';
     
@@ -865,8 +831,75 @@ document.getElementById('export-table').addEventListener('click', function() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-});
+}
 
-// Initial calculations
-document.getElementById('calculate-purchase').click();
-document.getElementById('calculate-ongoing').click();
+// Detailfunktion zum Umschalten der aufklappbaren Zeilen
+function toggleDetails(row) {
+    const category = row.getAttribute('data-category');
+    const isExpanded = row.classList.contains('expanded');
+    const detailRows = document.querySelectorAll(`.detail-row[data-category="${category}"]`);
+    
+    if (isExpanded) {
+        row.classList.remove('expanded');
+        detailRows.forEach(row => row.classList.remove('visible'));
+    } else {
+        row.classList.add('expanded');
+        detailRows.forEach(row => row.classList.add('visible'));
+    }
+}
+
+// 1. Kaufkosten berechnen
+function calculatePurchase() {
+    const purchasePrice = parseFloat(document.getElementById('purchase-price').value);
+    const grunderwerbsteuerRate = parseFloat(document.getElementById('grunderwerbsteuer').value);
+    const notaryRate = parseFloat(document.getElementById('notary-costs').value);
+    const brokerRate = parseFloat(document.getElementById('broker-fee').value);
+    
+    const grunderwerbsteuer = purchasePrice * (grunderwerbsteuerRate / 100);
+    const notaryCosts = purchasePrice * (notaryRate / 100);
+    const brokerFee = purchasePrice * (brokerRate / 100);
+    const totalExtra = grunderwerbsteuer + notaryCosts + brokerFee;
+    const totalCost = purchasePrice + totalExtra;
+    
+    // Kaufpreisaufteilung berechnen
+    const landValuePercentage = parseFloat(document.getElementById('land-value-percentage').value);
+    const buildingValuePercentage = parseFloat(document.getElementById('building-value-percentage').value);
+    const maintenanceCost = parseFloat(document.getElementById('maintenance-cost').value);
+    const furnitureValue = parseFloat(document.getElementById('furniture-value').value);
+    const maintenanceDistribution = parseInt(document.getElementById('maintenance-distribution').value);
+    
+    const landValue = purchasePrice * (landValuePercentage / 100);
+    const buildingValue = purchasePrice * (buildingValuePercentage / 100);
+    const annualMaintenance = maintenanceCost / maintenanceDistribution;
+    
+    // Kaufpreisaufteilung anzeigen
+    document.getElementById('result-purchase-price').textContent = formatCurrency(purchasePrice);
+    document.getElementById('result-grunderwerbsteuer').textContent = formatCurrency(grunderwerbsteuer);
+    document.getElementById('result-notary').textContent = formatCurrency(notaryCosts);
+    document.getElementById('result-broker').textContent = formatCurrency(brokerFee);
+    document.getElementById('result-total-extra').textContent = formatCurrency(totalExtra);
+    document.getElementById('result-total-cost').textContent = formatCurrency(totalCost);
+    document.getElementById('result-land-value').textContent = formatCurrency(landValue);
+    document.getElementById('result-building-value').textContent = formatCurrency(buildingValue);
+    document.getElementById('result-maintenance-cost').textContent = formatCurrency(maintenanceCost);
+    document.getElementById('result-furniture-value').textContent = formatCurrency(furnitureValue);
+    document.getElementById('result-annual-maintenance').textContent = formatCurrency(annualMaintenance);
+    
+    // Gebäudewert im Abschreibungsbereich aktualisieren
+    document.getElementById('building-value').value = buildingValue.toFixed(0);
+    
+    return {
+        purchasePrice,
+        grunderwerbsteuer,
+        notaryCosts,
+        brokerFee,
+        totalExtra,
+        totalCost,
+        landValue,
+        buildingValue,
+        maintenanceCost,
+        furnitureValue,
+        annualMaintenance,
+        maintenanceDistribution
+    };
+}

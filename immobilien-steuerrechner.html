@@ -4,474 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Immobilien-Steuerrechner Deutschland</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-            flex: 1;
-            min-width: 300px;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .results {
-            margin-top: 20px;
-        }
-        .result-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .result-item:last-child {
-            border-bottom: none;
-        }
-        .result-label {
-            font-weight: bold;
-        }
-        .result-value {
-            text-align: right;
-        }
-        .tab-container {
-            width: 100%;
-        }
-        .tabs {
-            display: flex;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #ddd;
-        }
-        .tab {
-            padding: 10px 15px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            border-bottom: none;
-            background-color: #f1f1f1;
-            margin-right: 5px;
-            border-radius: 4px 4px 0 0;
-        }
-        .tab.active {
-            background-color: white;
-            border-color: #ddd;
-            border-bottom: 1px solid white;
-            margin-bottom: -1px;
-        }
-        .tab-content {
-            display: none;
-            padding: 15px;
-            background: white;
-            border-radius: 0 0 4px 4px;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        #cashflowChart {
-            width: 100%;
-            height: 300px;
-            margin-top: 20px;
-        }
-        .info-icon {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            background-color: #3498db;
-            color: white;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 16px;
-            font-size: 12px;
-            margin-left: 5px;
-            cursor: help;
-        }
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 200px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            margin-left: -100px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 12px;
-            font-weight: normal;
-        }
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-        
-        /* Neue Stile für die Kaufpreisaufteilung */
-        .purchase-breakdown {
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 15px;
-            background-color: #f9f9f9;
-        }
-        
-        .purchase-breakdown h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #2c3e50;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 8px;
-        }
-        
-        .breakdown-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-        }
-        
-        .breakdown-label {
-            font-weight: 500;
-        }
-        
-        .breakdown-value {
-            font-weight: bold;
-        }
-        
-        .breakdown-total {
-            border-top: 2px solid #ddd;
-            margin-top: 10px;
-            padding-top: 10px;
-            font-weight: bold;
-        }
-        
-        .breakdown-note {
-            font-size: 12px;
-            color: #666;
-            font-style: italic;
-            margin-top: 10px;
-        }
-        
-        /* Zusätzlich für den Cashflow-Tab: verbesserte Abschreibungsanzeige */
-        .depreciation-breakdown {
-            background-color: #f0f7ff;
-            border: 1px solid #cce5ff;
-            border-radius: 6px;
-            padding: 10px 15px;
-            margin: 15px 0;
-        }
-        
-        .depreciation-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 3px 0;
-        }
-        
-        .depreciation-total {
-            border-top: 1px solid #cce5ff;
-            margin-top: 5px;
-            padding-top: 5px;
-            font-weight: bold;
-        }.year-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        .year-table th, .year-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: right;
-        }
-
-        .year-table th {
-            background-color: #f2f2f2;
-            position: sticky;
-            top: 0;
-            text-align: center;
-            font-weight: bold;
-            z-index: 10;
-        }
-
-        .year-table tr:nth-child(even):not(.detail-row) {
-            background-color: #f9f9f9;
-        }
-
-        .year-table tr:hover:not(.detail-row) {
-            background-color: #f1f1f1;
-            cursor: pointer;
-        }
-
-        .year-table .year-column {
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .table-container {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        /* Stile für aufklappbare Zeilen */
-        .detail-row {
-            display: none;
-            background-color: #f8f9fa;
-        }
-
-        .detail-row.visible {
-            display: table-row;
-        }
-
-        .detail-row td {
-            padding: 0;
-        }
-
-        .detail-content {
-            padding: 15px;
-            border-top: none;
-        }
-
-        .detail-tables {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .detail-table {
-            flex: 1;
-            min-width: 250px;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-        }
-
-        .detail-table th, .detail-table td {
-            border: 1px solid #e0e0e0;
-            padding: 5px 8px;
-            text-align: left;
-        }
-
-        .detail-table th {
-            background-color: #eaeaea;
-            font-weight: bold;
-            text-align: left;
-        }
-
-        .detail-table tr:nth-child(even) {
-            background-color: #f5f5f5;
-        }
-
-        .detail-category {
-            font-weight: bold;
-            color: #333;
-            margin-top: 10px;
-            margin-bottom: 5px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 3px;
-        }
-
-        .detail-row-title {
-            font-weight: bold;
-            width: 60%;
-        }
-
-        .detail-row-value {
-            text-align: right;
-            width: 40%;
-        }
-
-        .positive-value {
-            color: #27ae60;
-        }
-
-        .negative-value {
-            color: #e74c3c;
-        }
-
-        /* Pfeil-Indikator für aufklappbare Zeilen */
-        .expand-indicator {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            line-height: 16px;
-            text-align: center;
-            background-color: #3498db;
-            color: white;
-            border-radius: 50%;
-            margin-right: 5px;
-            font-size: 10px;
-            transition: transform 0.3s;
-        }
-
-        .expanded .expand-indicator {
-            transform: rotate(90deg);
-        }
-        .horizontal-year-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        .horizontal-year-table th, .horizontal-year-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: right;
-            min-width: 100px;
-        }
-
-        .horizontal-year-table .category-column {
-            width: 300px;
-            text-align: left;
-            position: sticky;
-            left: 0;
-            background-color: #f2f2f2;
-            z-index: 10;
-        }
-
-        .horizontal-year-table th:not(.category-column) {
-            background-color: #f2f2f2;
-        }
-
-        .horizontal-year-table tr th {
-            position: sticky;
-            top: 0;
-            font-weight: bold;
-            text-align: center;
-            z-index: 10;
-        }
-
-        .horizontal-year-table .category-cell {
-            font-weight: bold;
-            text-align: left;
-            position: sticky;
-            left: 0;
-            background-color: #f9f9f9;
-            z-index: 5;
-            cursor: pointer;
-        }
-
-        .horizontal-year-table .detail-label {
-            text-align: left;
-            padding-left: 25px;
-            position: sticky;
-            left: 0;
-            background-color: #f0f0f0;
-            z-index: 5;
-        }
-
-        .horizontal-year-table .main-row {
-            background-color: #f9f9f9;
-        }
-
-        .horizontal-year-table .main-row:hover {
-            background-color: #f1f1f1;
-        }
-
-        .horizontal-year-table .detail-row {
-            display: none;
-            background-color: #f0f0f0;
-        }
-
-        .horizontal-year-table .detail-row.visible {
-            display: table-row;
-        }
-
-        .table-container {
-            max-height: 600px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-
-        .positive-value {
-            color: #27ae60;
-        }
-
-        .negative-value {
-            color: #e74c3c;
-        }
-
-        /* Pfeil-Indikator für aufklappbare Zeilen */
-        .expand-indicator {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            line-height: 16px;
-            text-align: center;
-            background-color: #3498db;
-            color: white;
-            border-radius: 50%;
-            margin-right: 5px;
-            font-size: 10px;
-            transition: transform 0.3s;
-        }
-
-        .expanded .expand-indicator {
-            transform: rotate(90deg);
-        }
-
-        /* Hervorhebung der wichtigsten Zeilen */
-        .year-table tr[data-category="cf-before-financing"] .category-cell,
-        .year-table tr[data-category="cf-before-tax"] .category-cell,
-        .year-table tr[data-category="tax-savings"] .category-cell,
-        .year-table tr[data-category="cf-after-tax"] .category-cell {
-            font-weight: bold;
-            background-color: #eaf2f8;
-        }
-
-        /* Rahmen zwischen verschiedenen Abschnitten */
-        .year-table tr[data-category="cf-before-financing"],
-        .year-table tr[data-category="cf-before-tax"],
-        .year-table tr[data-category="tax-savings"],
-        .year-table tr[data-category="cf-after-tax"] {
-            border-top: 2px solid #ddd;
-            border-bottom: 2px solid #ddd;
-        }
-    </style>
+    <link rel="stylesheet" href="immobilien-steuerrechner.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 <body>
@@ -480,15 +13,16 @@
     
     <div class="tab-container">
         <div class="tabs">
-            <div class="tab active" data-tab="purchase">Kaufkosten & Steuern</div>
-            <div class="tab" data-tab="ongoing">Laufende Kosten</div>
+            <div class="tab active" data-tab="input">Immobiliendaten</div>
+            <div class="tab" data-tab="overview">Übersichten</div>
             <div class="tab" data-tab="cashflow">Cashflow</div>
             <div class="tab" data-tab="yeartable">Jahrestabelle</div>
-            <div class="tab" data-tab="summary">Zusammenfassung</div>
         </div>
         
-        <div id="purchase" class="tab-content active">
+        <!-- Tab 1: Eingabe aller Immobiliendaten -->
+        <div id="input" class="tab-content active">
             <div class="container">
+                <!-- Karte: Immobiliendaten -->
                 <div class="card">
                     <h2>Immobiliendaten</h2>
                     <div class="form-group">
@@ -540,9 +74,12 @@
                         </label>
                         <input type="number" id="grunderwerbsteuer" step="0.1" disabled>
                     </div>
+                    <div class="form-group">
+                        <label for="property-size">Wohnfläche (m²)</label>
+                        <input type="number" id="property-size" value="80">
+                    </div>
                 </div>
-                
-                <!-- Neue Kaufpreisaufteilung Karte -->
+                <!-- Karte: Kaufpreisaufteilung -->
                 <div class="card">
                     <h2>Kaufpreisaufteilung</h2>
                     <div class="form-group">
@@ -591,11 +128,9 @@
                             <option value="5">Auf 5 Jahre verteilen</option>
                         </select>
                     </div>
-                    <div class="breakdown-note">
-                        Hinweis: Der Erhaltungsaufwand wird nur einmal abgeschrieben, gleichmäßig verteilt auf die gewählten Jahre.
-                    </div>
                 </div>
                 
+                <!-- Karte: Finanzierung -->
                 <div class="card">
                     <h2>Finanzierung</h2>
                     <div class="form-group">
@@ -624,65 +159,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="card">
-                <h2>Kaufkosten & Steuern</h2>
-                <div class="results" id="purchase-results">
-                    <div class="result-item">
-                        <div class="result-label">Kaufpreis</div>
-                        <div class="result-value" id="result-purchase-price">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Grunderwerbsteuer</div>
-                        <div class="result-value" id="result-grunderwerbsteuer">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Notarkosten</div>
-                        <div class="result-value" id="result-notary">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Maklerprovision</div>
-                        <div class="result-value" id="result-broker">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Gesamte Kaufnebenkosten</div>
-                        <div class="result-value" id="result-total-extra">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Gesamtkosten</div>
-                        <div class="result-value" id="result-total-cost">0 €</div>
-                    </div>
-                    <!-- Neue Ergebniszeilen für Kaufpreisaufteilung -->
-                    <div class="result-item">
-                        <div class="result-label">Grundstücksanteil</div>
-                        <div class="result-value" id="result-land-value">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Gebäudeanteil</div>
-                        <div class="result-value" id="result-building-value">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Erhaltungsaufwand</div>
-                        <div class="result-value" id="result-maintenance-cost">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Kaufpreis Möbel</div>
-                        <div class="result-value" id="result-furniture-value">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Jährlicher Erhaltungsaufwand (steuerlich)</div>
-                        <div class="result-value" id="result-annual-maintenance">0 €</div>
-                    </div>
-                </div>
-                <button id="calculate-purchase">Berechnen</button>
-            </div>
-        </div>
-        
-        <div id="ongoing" class="tab-content">
-            <div class="container">
+                
+                <!-- Karte: Vermietung und laufende Kosten -->
                 <div class="card">
-                    <h2>Vermietung</h2>
+                    <h2>Vermietung und laufende Kosten</h2>
                     <div class="form-group">
                         <label for="rental-income">Monatliche Kaltmiete (€)</label>
                         <input type="number" id="rental-income" value="1200">
@@ -691,10 +171,6 @@
                         <label for="vacancy-rate">Leerstandsquote (% p.a.)</label>
                         <input type="number" id="vacancy-rate" step="0.1" value="3.0">
                     </div>
-                </div>
-                
-                <div class="card">
-                    <h2>Laufende Kosten</h2>
                     <div class="form-group">
                         <label for="property-tax">Grundsteuer (€ p.a.)
                             <span class="tooltip">?
@@ -712,54 +188,11 @@
                         <input type="number" id="maintenance-reserve" step="0.1" value="7.5">
                     </div>
                     <div class="form-group">
-                        <label for="property-size">Wohnfläche (m²)</label>
-                        <input type="number" id="property-size" value="80">
-                    </div>
-                    <div class="form-group">
                         <label for="insurance">Versicherungen (€ p.a.)</label>
                         <input type="number" id="insurance" value="300">
                     </div>
                 </div>
-            </div>
-            
-            <div class="card">
-                <h2>Jährliche Kosten & Einnahmen</h2>
-                <div class="results" id="ongoing-results">
-                    <div class="result-item">
-                        <div class="result-label">Jährliche Mieteinnahmen (brutto)</div>
-                        <div class="result-value" id="result-annual-rent">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Effektive Mieteinnahmen (nach Leerstand)</div>
-                        <div class="result-value" id="result-effective-rent">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Grundsteuer</div>
-                        <div class="result-value" id="result-property-tax">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Hausverwaltung</div>
-                        <div class="result-value" id="result-management">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Instandhaltungsrücklage</div>
-                        <div class="result-value" id="result-maintenance">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Versicherungen</div>
-                        <div class="result-value" id="result-insurance">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Gesamte laufende Kosten</div>
-                        <div class="result-value" id="result-total-ongoing">0 €</div>
-                    </div>
-                </div>
-                <button id="calculate-ongoing">Berechnen</button>
-            </div>
-        </div>
-        
-        <div id="cashflow" class="tab-content">
-            <div class="container">
+                <!-- Karte: Steuerinformationen -->
                 <div class="card">
                     <h2>Steuerinformationen</h2>
                     <div class="form-group">
@@ -794,7 +227,6 @@
                         </label>
                         <input type="number" id="building-value" value="240000">
                     </div>
-                    <!-- Neues Feld für Möbelabschreibung -->
                     <div class="form-group">
                         <label for="furniture-depreciation-rate">AfA-Satz Möbel (% p.a.)
                             <span class="tooltip">?
@@ -805,8 +237,9 @@
                     </div>
                 </div>
                 
+                <!-- Karte: Kapitalwert und Rendite -->
                 <div class="card">
-                    <h2>Kapitalwert</h2>
+                    <h2>Kapitalwert und Rendite</h2>
                     <div class="form-group">
                         <label for="expected-appreciation">Jährliche Wertsteigerung (%)</label>
                         <input type="number" id="expected-appreciation" step="0.1" value="2.0">
@@ -822,6 +255,147 @@
                 </div>
             </div>
             
+            <!-- Berechnen-Button für alle Eingaben -->
+            <div class="card calculation-button-container">
+                <button id="calculate-all" class="primary-button">Alle Berechnungen durchführen</button>
+            </div>
+        </div>
+        
+        <!-- Tab 2: Übersichten zusammengefasst -->
+        <div id="overview" class="tab-content">
+            <div class="container">
+                <!-- Karte: Kaufkosten & Steuern -->
+                <div class="card">
+                    <h2>Kaufkosten & Steuern</h2>
+                    <div class="results" id="purchase-results">
+                        <div class="result-item">
+                            <div class="result-label">Kaufpreis</div>
+                            <div class="result-value" id="result-purchase-price">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Grunderwerbsteuer</div>
+                            <div class="result-value" id="result-grunderwerbsteuer">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Notarkosten</div>
+                            <div class="result-value" id="result-notary">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Maklerprovision</div>
+                            <div class="result-value" id="result-broker">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Gesamte Kaufnebenkosten</div>
+                            <div class="result-value" id="result-total-extra">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Gesamtkosten</div>
+                            <div class="result-value" id="result-total-cost">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Grundstücksanteil</div>
+                            <div class="result-value" id="result-land-value">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Gebäudeanteil</div>
+                            <div class="result-value" id="result-building-value">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Erhaltungsaufwand</div>
+                            <div class="result-value" id="result-maintenance-cost">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Kaufpreis Möbel</div>
+                            <div class="result-value" id="result-furniture-value">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Jährlicher Erhaltungsaufwand (steuerlich)</div>
+                            <div class="result-value" id="result-annual-maintenance">0 €</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Karte: Jährliche Kosten & Einnahmen -->
+                <div class="card">
+                    <h2>Jährliche Kosten & Einnahmen</h2>
+                    <div class="results" id="ongoing-results">
+                        <div class="result-item">
+                            <div class="result-label">Jährliche Mieteinnahmen (brutto)</div>
+                            <div class="result-value" id="result-annual-rent">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Effektive Mieteinnahmen (nach Leerstand)</div>
+                            <div class="result-value" id="result-effective-rent">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Grundsteuer</div>
+                            <div class="result-value" id="result-property-tax">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Hausverwaltung</div>
+                            <div class="result-value" id="result-management">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Instandhaltungsrücklage</div>
+                            <div class="result-value" id="result-maintenance">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Versicherungen</div>
+                            <div class="result-value" id="result-insurance">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Gesamte laufende Kosten</div>
+                            <div class="result-value" id="result-total-ongoing">0 €</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Karte: Zusammenfassung -->
+                <div class="card">
+                    <h2>Zusammenfassung</h2>
+                    <div class="results" id="summary-results">
+                        <div class="result-item">
+                            <div class="result-label">Kaufpreis inkl. Nebenkosten</div>
+                            <div class="result-value" id="summary-total-cost">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Eigenkapital</div>
+                            <div class="result-value" id="summary-equity">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Fremdkapital</div>
+                            <div class="result-value" id="summary-loan">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Monatliche Belastung (Bank)</div>
+                            <div class="result-value" id="summary-monthly-payment">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Monatlicher Cashflow nach Steuern</div>
+                            <div class="result-value" id="summary-monthly-cashflow">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Immobilienwert nach Betrachtungszeitraum</div>
+                            <div class="result-value" id="summary-final-value">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Restschuld nach Betrachtungszeitraum</div>
+                            <div class="result-value" id="summary-remaining-debt">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Eigenkapitalentwicklung</div>
+                            <div class="result-value" id="summary-equity-growth">0 €</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Gesamtrendite p.a. (inkl. Wertsteigerung)</div>
+                            <div class="result-value" id="summary-total-roi">0 %</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab 3: Cashflow (bleibt wie zuvor) -->
+        <div id="cashflow" class="tab-content">
             <div class="card">
                 <h2>Cashflow-Analyse</h2>
                 <div class="results" id="cashflow-results">
@@ -898,14 +472,13 @@
                         <div class="result-value" id="result-cf-roi">0 %</div>
                     </div>
                 </div>
-                <button id="calculate-cashflow">Berechnen</button>
                 
                 <div class="chart-container" style="position: relative; height: 300px; width: 100%; margin-top: 20px;">
                     <canvas id="cashflowChart"></canvas>
                 </div>
             </div>
         </div>
-
+        <!-- Tab 4: Jahrestabelle (bleibt wie zuvor) -->
         <div id="yeartable" class="tab-content">
             <div class="card">
                 <h2>Jahresübersicht</h2>
@@ -971,7 +544,6 @@
                                 <td class="category-cell">Cashflow vor Finanzierung</td>
                                 <!-- Wird durch JavaScript mit Werten gefüllt -->
                             </tr>
-                            
                             <!-- 4. Finanzierung -->
                             <tr class="main-row" data-category="financing">
                                 <td class="category-cell"><span class="expand-indicator">&#9658;</span> Finanzierung</td>
@@ -1033,7 +605,6 @@
                                 <td class="detail-label">Einkommensteuer (nachher)</td>
                                 <!-- Wird durch JavaScript mit Werten gefüllt -->
                             </tr>
-                            
                             <!-- 7. Steuerersparnis -->
                             <tr class="main-row" data-category="tax-savings">
                                 <td class="category-cell">Steuerersparnis</td>
@@ -1071,56 +642,10 @@
                     </table>
                 </div>
                 <div style="margin-top: 15px;">
-                    <button id="calculate-yeartable">Berechnen</button>
                     <button id="export-table" style="margin-left: 10px; background-color: #27ae60;">Als CSV exportieren</button>
                     <button id="expand-all" style="margin-left: 10px; background-color: #f39c12;">Alle aufklappen</button>
                     <button id="collapse-all" style="margin-left: 10px; background-color: #e74c3c;">Alle zuklappen</button>
                 </div>
-            </div>
-        </div>
-        
-        <div id="summary" class="tab-content">
-            <div class="card">
-                <h2>Zusammenfassung</h2>
-                <div class="results" id="summary-results">
-                    <div class="result-item">
-                        <div class="result-label">Kaufpreis inkl. Nebenkosten</div>
-                        <div class="result-value" id="summary-total-cost">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Eigenkapital</div>
-                        <div class="result-value" id="summary-equity">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Fremdkapital</div>
-                        <div class="result-value" id="summary-loan">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Monatliche Belastung (Bank)</div>
-                        <div class="result-value" id="summary-monthly-payment">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Monatlicher Cashflow nach Steuern</div>
-                        <div class="result-value" id="summary-monthly-cashflow">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Immobilienwert nach Betrachtungszeitraum</div>
-                        <div class="result-value" id="summary-final-value">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Restschuld nach Betrachtungszeitraum</div>
-                        <div class="result-value" id="summary-remaining-debt">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Eigenkapitalentwicklung</div>
-                        <div class="result-value" id="summary-equity-growth">0 €</div>
-                    </div>
-                    <div class="result-item">
-                        <div class="result-label">Gesamtrendite p.a. (inkl. Wertsteigerung)</div>
-                        <div class="result-value" id="summary-total-roi">0 %</div>
-                    </div>
-                </div>
-                <button id="calculate-summary">Berechnen</button>
             </div>
         </div>
     </div>

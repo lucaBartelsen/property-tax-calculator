@@ -1,0 +1,502 @@
+/* Grundlegende Stile */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    flex: 1;
+    min-width: 300px;
+}
+
+h1, h2, h3 {
+    color: #2c3e50;
+}
+
+/* Formular Stile */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input, select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+.primary-button {
+    background-color: #2c3e50;
+    font-size: 18px;
+    padding: 12px 20px;
+    width: 100%;
+}
+
+.primary-button:hover {
+    background-color: #1a2530;
+}
+
+.calculation-button-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Ergebnisbereich Stile */
+.results {
+    margin-top: 20px;
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.result-item:last-child {
+    border-bottom: none;
+}
+
+.result-label {
+    font-weight: bold;
+}
+
+.result-value {
+    text-align: right;
+}
+
+/* Tab Stile */
+.tab-container {
+    width: 100%;
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tab {
+    padding: 10px 15px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background-color: #f1f1f1;
+    margin-right: 5px;
+    border-radius: 4px 4px 0 0;
+}
+
+.tab.active {
+    background-color: white;
+    border-color: #ddd;
+    border-bottom: 1px solid white;
+    margin-bottom: -1px;
+}
+
+.tab-content {
+    display: none;
+    padding: 15px;
+    background: white;
+    border-radius: 0 0 4px 4px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Chart Stil */
+#cashflowChart {
+    width: 100%;
+    height: 300px;
+    margin-top: 20px;
+}
+
+/* Tooltip Stile */
+.info-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: #3498db;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 12px;
+    margin-left: 5px;
+    cursor: help;
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Kaufpreisaufteilung Stile */
+.purchase-breakdown {
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    background-color: #f9f9f9;
+}
+
+.purchase-breakdown h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+.breakdown-label {
+    font-weight: 500;
+}
+
+.breakdown-value {
+    font-weight: bold;
+}
+
+.breakdown-total {
+    border-top: 2px solid #ddd;
+    margin-top: 10px;
+    padding-top: 10px;
+    font-weight: bold;
+}
+
+.breakdown-note {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+    margin-top: 10px;
+}
+
+/* Abschreibung Stile */
+.depreciation-breakdown {
+    background-color: #f0f7ff;
+    border: 1px solid #cce5ff;
+    border-radius: 6px;
+    padding: 10px 15px;
+    margin: 15px 0;
+}
+
+.depreciation-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+}
+
+.depreciation-total {
+    border-top: 1px solid #cce5ff;
+    margin-top: 5px;
+    padding-top: 5px;
+    font-weight: bold;
+}
+
+/* Jahrestabelle Stile */
+.year-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.year-table th, .year-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: right;
+}
+
+.year-table th {
+    background-color: #f2f2f2;
+    position: sticky;
+    top: 0;
+    text-align: center;
+    font-weight: bold;
+    z-index: 10;
+}
+
+.year-table tr:nth-child(even):not(.detail-row) {
+    background-color: #f9f9f9;
+}
+
+.year-table tr:hover:not(.detail-row) {
+    background-color: #f1f1f1;
+    cursor: pointer;
+}
+
+.year-table .year-column {
+    font-weight: bold;
+    text-align: center;
+}
+
+.table-container {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Stile für aufklappbare Zeilen */
+.detail-row {
+    display: none;
+    background-color: #f8f9fa;
+}
+
+.detail-row.visible {
+    display: table-row;
+}
+
+.detail-row td {
+    padding: 0;
+}
+
+.detail-content {
+    padding: 15px;
+    border-top: none;
+}
+
+.detail-tables {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.detail-table {
+    flex: 1;
+    min-width: 250px;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+.detail-table th, .detail-table td {
+    border: 1px solid #e0e0e0;
+    padding: 5px 8px;
+    text-align: left;
+}
+
+.detail-table th {
+    background-color: #eaeaea;
+    font-weight: bold;
+    text-align: left;
+}
+
+.detail-table tr:nth-child(even) {
+    background-color: #f5f5f5;
+}
+
+.detail-category {
+    font-weight: bold;
+    color: #333;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 3px;
+}
+
+.detail-row-title {
+    font-weight: bold;
+    width: 60%;
+}
+
+.detail-row-value {
+    text-align: right;
+    width: 40%;
+}
+
+.positive-value {
+    color: #27ae60;
+}
+
+.negative-value {
+    color: #e74c3c;
+}
+
+/* Pfeil-Indikator für aufklappbare Zeilen */
+.expand-indicator {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    background-color: #3498db;
+    color: white;
+    border-radius: 50%;
+    margin-right: 5px;
+    font-size: 10px;
+    transition: transform 0.3s;
+}
+
+.expanded .expand-indicator {
+    transform: rotate(90deg);
+}
+
+.horizontal-year-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.horizontal-year-table th, .horizontal-year-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: right;
+    min-width: 100px;
+}
+
+.horizontal-year-table .category-column {
+    width: 300px;
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background-color: #f2f2f2;
+    z-index: 10;
+}
+
+.horizontal-year-table th:not(.category-column) {
+    background-color: #f2f2f2;
+}
+
+.horizontal-year-table tr th {
+    position: sticky;
+    top: 0;
+    font-weight: bold;
+    text-align: center;
+    z-index: 10;
+}
+
+.horizontal-year-table .category-cell {
+    font-weight: bold;
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background-color: #f9f9f9;
+    z-index: 5;
+    cursor: pointer;
+}
+
+.horizontal-year-table .detail-label {
+    text-align: left;
+    padding-left: 25px;
+    position: sticky;
+    left: 0;
+    background-color: #f0f0f0;
+    z-index: 5;
+}
+
+.horizontal-year-table .main-row {
+    background-color: #f9f9f9;
+}
+
+.horizontal-year-table .main-row:hover {
+    background-color: #f1f1f1;
+}
+
+.horizontal-year-table .detail-row {
+    display: none;
+    background-color: #f0f0f0;
+}
+
+.horizontal-year-table .detail-row.visible {
+    display: table-row;
+}
+
+/* Hervorhebung der wichtigsten Zeilen */
+.year-table tr[data-category="cf-before-financing"] .category-cell,
+.year-table tr[data-category="cf-before-tax"] .category-cell,
+.year-table tr[data-category="tax-savings"] .category-cell,
+.year-table tr[data-category="cf-after-tax"] .category-cell {
+    font-weight: bold;
+    background-color: #eaf2f8;
+}
+
+/* Rahmen zwischen verschiedenen Abschnitten */
+.year-table tr[data-category="cf-before-financing"],
+.year-table tr[data-category="cf-before-tax"],
+.year-table tr[data-category="tax-savings"],
+.year-table tr[data-category="cf-after-tax"] {
+    border-top: 2px solid #ddd;
+    border-bottom: 2px solid #ddd;
+}
+
+/* Responsives Design */
+@media screen and (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .card {
+        min-width: 100%;
+    }
+    
+    .tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab {
+        margin-bottom: 5px;
+    }
+}
