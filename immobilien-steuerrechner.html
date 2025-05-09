@@ -14,6 +14,7 @@
     <div class="tab-container">
         <div class="tabs">
             <div class="tab active" data-tab="input">Immobiliendaten</div>
+            <div class="tab" data-tab="tax">Steuerinformationen</div>
             <div class="tab" data-tab="overview">Übersichten</div>
             <div class="tab" data-tab="cashflow">Cashflow</div>
             <div class="tab" data-tab="yeartable">Jahrestabelle</div>
@@ -189,42 +190,6 @@
                     <div class="form-group">
                         <label for="insurance">Versicherungen (€ p.a.)</label>
                         <input type="number" id="insurance" value="300">
-                    </div>
-                </div>
-                <!-- Karte: Steuerinformationen -->
-                <div class="card">
-                    <h2>Steuerinformationen</h2>
-                    <div class="form-group">
-                        <label for="annual-income">Zu versteuerndes Brutto-Jahreseinkommen (€)
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Ihr zu versteuerndes Brutto-Jahreseinkommen ohne die Immobilieneinkünfte</span>
-                            </span>
-                        </label>
-                        <input type="number" id="annual-income" value="70000">
-                    </div>
-                    <div class="form-group">
-                        <label for="tax-rate">Errechneter Steuersatz (%)
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Wird basierend auf Ihrem Einkommen automatisch berechnet</span>
-                            </span>
-                        </label>
-                        <input type="number" id="tax-rate" step="0.1" value="42.0" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label for="depreciation-rate">AfA-Satz (% p.a.)
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Normalerweise 2% für Gebäude ab 2023</span>
-                            </span>
-                        </label>
-                        <input type="number" id="depreciation-rate" step="0.1" value="2.0">
-                    </div>
-                    <div class="form-group">
-                        <label for="furniture-depreciation-rate">AfA-Satz Möbel (% p.a.)
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Normalerweise 10% für Möbel und Einrichtung</span>
-                            </span>
-                        </label>
-                        <input type="number" id="furniture-depreciation-rate" step="0.1" value="10.0">
                     </div>
                 </div>
                 
@@ -440,13 +405,25 @@
                         <div class="result-label">Vorherige Einkommensteuer</div>
                         <div class="result-value" id="result-cf-previous-tax">0 €</div>
                     </div>
+                    <div class="result-item" id="church-tax-container" style="display: none;">
+                        <div class="result-label">Kirchensteuer (vorher)</div>
+                        <div class="result-value" id="result-cf-previous-church-tax">0 €</div>
+                    </div>
                     <div class="result-item">
                         <div class="result-label">Einkommensteuer (nach Immobilie)</div>
                         <div class="result-value" id="result-cf-income-tax">0 €</div>
                     </div>
+                    <div class="result-item" id="church-tax-new-container" style="display: none;">
+                        <div class="result-label">Kirchensteuer (nach Immobilie)</div>
+                        <div class="result-value" id="result-cf-new-church-tax">0 €</div>
+                    </div>
                     <div class="result-item">
                         <div class="result-label">Steuerersparnis durch Immobilie</div>
                         <div class="result-value" id="result-cf-tax-savings">0 €</div>
+                    </div>
+                    <div class="result-item" id="church-tax-savings-container" style="display: none;">
+                        <div class="result-label">Kirchensteuer-Ersparnis</div>
+                        <div class="result-value" id="result-cf-church-tax-savings">0 €</div>
                     </div>
                     
                     <!-- Cashflow-Ergebnisse -->
@@ -596,6 +573,12 @@
                                 <td class="detail-label">Einkommensteuer (nachher)</td>
                                 <!-- Wird durch JavaScript mit Werten gefüllt -->
                             </tr>
+                            <tr class="detail-row" data-category="tax" data-church-tax="true">
+                                <td class="detail-label">Kirchensteuer (vorher)</td>
+                            </tr>
+                            <tr class="detail-row" data-category="tax" data-church-tax="true">
+                                <td class="detail-label">Kirchensteuer (nachher)</td>
+                            </tr>
                             <!-- 7. Steuerersparnis -->
                             <tr class="main-row" data-category="tax-savings">
                                 <td class="category-cell">Steuerersparnis</td>
@@ -637,6 +620,82 @@
                     <button id="expand-all" style="margin-left: 10px; background-color: #f39c12;">Alle aufklappen</button>
                     <button id="collapse-all" style="margin-left: 10px; background-color: #e74c3c;">Alle zuklappen</button>
                 </div>
+            </div>
+        </div>
+        <!-- Neuer Tab: Steuerinformationen -->
+        <div id="tax" class="tab-content">
+            <div class="card">
+                <h2>Persönliche Steuerinformationen</h2>
+                <div class="form-group">
+                    <label for="tax-status">Persönliche Verhältnisse</label>
+                    <select id="tax-status">
+                        <option value="single">Alleinstehend</option>
+                        <option value="married">Verheiratet (Splitting-Verfahren)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="annual-income">Zu versteuerndes Brutto-Jahreseinkommen (€)
+                        <span class="tooltip">?
+                            <span class="tooltiptext">Ihr zu versteuerndes Brutto-Jahreseinkommen ohne die Immobilieneinkünfte</span>
+                        </span>
+                    </label>
+                    <input type="number" id="annual-income" value="70000">
+                </div>
+                <div class="form-group">
+                    <label for="church-tax">Kirchensteuer
+                        <span class="tooltip">?
+                            <span class="tooltiptext">Kirchensteuerpflichtig ja/nein</span>
+                        </span>
+                    </label>
+                    <select id="church-tax">
+                        <option value="no">Nein</option>
+                        <option value="yes">Ja</option>
+                    </select>
+                </div>
+                <div class="form-group" id="church-tax-rate-container" style="display: none;">
+                    <label for="church-tax-rate">Kirchensteuersatz (%)
+                        <span class="tooltip">?
+                            <span class="tooltiptext">8% in Bayern und Baden-Württemberg, 9% in anderen Bundesländern</span>
+                        </span>
+                    </label>
+                    <select id="church-tax-rate">
+                        <option value="8">8%</option>
+                        <option value="9" selected>9%</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tax-rate">Errechneter Steuersatz (%)
+                        <span class="tooltip">?
+                            <span class="tooltiptext">Wird basierend auf Ihrem Einkommen automatisch berechnet</span>
+                        </span>
+                    </label>
+                    <input type="number" id="tax-rate" step="0.1" value="42.0" disabled>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Immobilien-Abschreibung</h2>
+                <div class="form-group">
+                    <label for="depreciation-rate">AfA-Satz (% p.a.)
+                        <span class="tooltip">?
+                            <span class="tooltiptext">Normalerweise 2% für Gebäude ab 2023</span>
+                        </span>
+                    </label>
+                    <input type="number" id="depreciation-rate" step="0.1" value="2.0">
+                </div>
+                <div class="form-group">
+                    <label for="furniture-depreciation-rate">AfA-Satz Möbel (% p.a.)
+                        <span class="tooltip">?
+                            <span class="tooltiptext">Normalerweise 10% für Möbel und Einrichtung</span>
+                        </span>
+                    </label>
+                    <input type="number" id="furniture-depreciation-rate" step="0.1" value="10.0">
+                </div>
+            </div>
+            
+            <!-- Berechnen-Button für Steuerinfo -->
+            <div class="card calculation-button-container">
+                <button id="calculate-tax" class="primary-button">Steuerinformationen aktualisieren</button>
             </div>
         </div>
     </div>

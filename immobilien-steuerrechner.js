@@ -1,6 +1,12 @@
 // Aktualisierte Funktion zur Berechnung der Einkommensteuer nach deutschem Recht
-function calculateGermanIncomeTax(income) {
+function calculateGermanIncomeTax(income, taxStatus = 'single') {
     // Einkommensteuer für 2024 mit den aktuellen Formeln
+    let taxableIncome = income;
+    
+    // Bei Verheirateten wird das Einkommen halbiert für die Berechnung (Splitting-Verfahren)
+    if (taxStatus === 'married') {
+        taxableIncome = income / 2;
+    }
     
     // Variablen für die Steuerformel
     let tax = 0;
@@ -15,34 +21,112 @@ function calculateGermanIncomeTax(income) {
     // > 277.825 € (vierte Zone - 45%)
     
     // Einkommensteuertarif 2024
-    if (income <= grundfreibetrag) {
+    if (taxableIncome <= grundfreibetrag) {
         // a) bis 12.096 Euro: ESt = 0
         tax = 0;
     } 
-    else if (income <= zone1EndIncome) {
+    else if (taxableIncome <= zone1EndIncome) {
         // b) von 12.097 Euro bis 17.443 Euro: ESt = (932,3 * y + 1.400) * y
         // mit y = (zvE - 12.096) / 10.000
-        const y = (income - grundfreibetrag) / 10000;
+        const y = (taxableIncome - grundfreibetrag) / 10000;
         tax = (932.3 * y + 1400) * y;
     } 
-    else if (income <= zone2EndIncome) {
+    else if (taxableIncome <= zone2EndIncome) {
         // c) von 17.444 Euro bis 68.480 Euro: ESt = (176,64 * z + 2.397) * z + 1.015,13
         // mit z = (zvE - 17.443) / 10.000
-        const z = (income - 17443) / 10000;
+        const z = (taxableIncome - 17443) / 10000;
         tax = (176.64 * z + 2397) * z + 1015.13;
     } 
-    else if (income <= zone3EndIncome) {
+    else if (taxableIncome <= zone3EndIncome) {
         // d) von 68.481 Euro bis 277.825 Euro: ESt = 0,42 * zvE - 10.911,92
-        tax = 0.42 * income - 10911.92;
+        tax = 0.42 * taxableIncome - 10911.92;
     } 
     else {
         // e) ab 277.826 Euro: ESt = 0,45 * zvE - 19.246,67
-        tax = 0.45 * income - 19246.67;
+        tax = 0.45 * taxableIncome - 19246.67;
+    }
+    
+    // Bei Verheirateten wird der Steuerbetrag verdoppelt
+    if (taxStatus === 'married') {
+        tax = tax * 2;
     }
     
     // Runden auf volle Euro-Beträge (wie beim Finanzamt)
     return Math.round(tax);
 }
+
+// Funktion zur Berechnung der Kirchensteuer
+function calculateChurchTax(incomeTax, hasChurchTax, churchTaxRate) {
+    if (!hasChurchTax) return 0;
+    return incomeTax * (churchTaxRate / 100);
+}
+
+// Funktion zur Berechnung der Steuerinformationen
+function calculateTaxInfo() {
+    const annualIncome = parseFloat(document.getElementById('annual-income').value);
+    const taxStatus = document.getElementById('tax-status').value;
+    const hasChurchTax = document.getElementById('church-tax').value === 'yes';
+    const churchTaxRate = parseFloat(document.getElementById('church-tax-rate').value);
+    
+    // Einkommensteuer berechnen
+    const incomeTax = calculateGermanIncomeTax(annualIncome, taxStatus);
+    
+    // Kirchensteuer berechnen
+    const churchTax = calculateChurchTax(incomeTax, hasChurchTax, churchTaxRate);
+    
+    // Steuersatz berechnen
+    const taxRate = (incomeTax / annualIncome) * 100;
+    
+    // Steuersatz anzeigen
+    document.getElementById('tax-rate').value = taxRate.toFixed(1);
+    
+    return {
+        annualIncome,
+        taxStatus,
+        incomeTax,
+        hasChurchTax,
+        churchTaxRate,
+        churchTax,
+        taxRate
+    };
+}
+
+// Event-Listener für Kirchensteuer-Toggle
+document.addEventListener('DOMContentLoaded', function() {
+    // Vorhandene DOMContentLoaded-Funktionen...
+    
+    // Kirchensteuer ein-/ausblenden
+    document.getElementById('church-tax').addEventListener('change', function() {
+        const churchTaxRateContainer = document.getElementById('church-tax-rate-container');
+        if (this.value === 'yes') {
+            churchTaxRateContainer.style.display = 'block';
+        } else {
+            churchTaxRateContainer.style.display = 'none';
+        }
+    });
+    
+    // Button zum Aktualisieren der Steuerinformationen
+    document.getElementById('calculate-tax').addEventListener('click', function() {
+        calculateTaxInfo();
+        
+        // Wenn weitere Berechnungen ausgeführt werden sollen
+        calculateCashflow();
+        calculateYearTable();
+    });
+    
+    // Bundesland ändern - Kirchensteuersatz anpassen
+    document.getElementById('bundesland').addEventListener('change', function() {
+        const bundesland = this.options[this.selectedIndex].text;
+        const churchTaxRateSelect = document.getElementById('church-tax-rate');
+        
+        // In Bayern und Baden-Württemberg ist der Kirchensteuersatz 8%
+        if (bundesland.includes('Bayern') || bundesland.includes('Baden-Württemberg')) {
+            churchTaxRateSelect.value = '8';
+        } else {
+            churchTaxRateSelect.value = '9';
+        }
+    });
+});
 
 // Function to format currency
 function formatCurrency(value) {
@@ -229,7 +313,11 @@ function calculateCashflow() {
     const repaymentRate = parseFloat(document.getElementById('repayment-rate').value) / 100;
     
     // Steuer- und Abschreibungsdaten
-    const annualIncome = parseFloat(document.getElementById('annual-income').value);
+    const taxInfo = calculateTaxInfo(); // Ruft die neue Funktion auf, um alle Steuerinfos zu bekommen
+    const annualIncome = taxInfo.annualIncome;
+    const taxStatus = taxInfo.taxStatus;
+    const hasChurchTax = taxInfo.hasChurchTax;
+    const churchTaxRate = taxInfo.churchTaxRate;
     const depreciationRate = parseFloat(document.getElementById('depreciation-rate').value) / 100;
     const buildingValue = parseFloat(document.getElementById('building-value').value);
     const furnitureValue = parseFloat(document.getElementById('furniture-value').value);
@@ -258,6 +346,17 @@ function calculateCashflow() {
     let yearlyPrincipal = Math.min(annuity - yearlyInterest, loanAmount);
     let yearlyFinancingCosts = yearlyInterest + yearlyPrincipal;
     let remainingLoan = loanAmount - yearlyPrincipal;
+
+    // UI-Elemente für Kirchensteuer je nach Auswahl ein-/ausblenden
+    const churchTaxContainer = document.getElementById('church-tax-container');
+    const churchTaxNewContainer = document.getElementById('church-tax-new-container');
+    const churchTaxSavingsContainer = document.getElementById('church-tax-savings-container');
+
+    const churchTaxRows = document.querySelectorAll('.detail-row[data-category="tax"][data-church-tax="true"]');
+
+    churchTaxRows.forEach(row => {
+        row.style.display = hasChurchTax ? '' : 'none';
+    });
     
     // Cashflow vor Steuern berechnen
     const cashflowBeforeTax = ongoingData.effectiveRent - ongoingData.totalOngoing - yearlyFinancingCosts;
@@ -266,10 +365,18 @@ function calculateCashflow() {
     const taxableIncome = cashflowBeforeTax + yearlyPrincipal - annualBuildingDepreciation - annualFurnitureDepreciation - purchaseData.annualMaintenance;
     
     // Steuerberechnung mit progressivem Steuersatz
-    const previousIncomeTax = calculateGermanIncomeTax(annualIncome);
+    const previousIncomeTax = calculateGermanIncomeTax(annualIncome, taxStatus);
     const totalTaxableIncome = Math.max(0, annualIncome + taxableIncome);
-    const newIncomeTax = calculateGermanIncomeTax(totalTaxableIncome);
-    const taxSavings = previousIncomeTax - newIncomeTax;
+    const newIncomeTax = calculateGermanIncomeTax(totalTaxableIncome, taxStatus);
+
+    // Kirchensteuer berechnen
+    const previousChurchTax = calculateChurchTax(previousIncomeTax, hasChurchTax, churchTaxRate);
+    const newChurchTax = calculateChurchTax(newIncomeTax, hasChurchTax, churchTaxRate);
+
+    // Gesamte Steuerersparnis (Einkommensteuer + Kirchensteuer)
+    const incomeTaxSavings = previousIncomeTax - newIncomeTax;
+    const churchTaxSavings = previousChurchTax - newChurchTax;
+    const taxSavings = incomeTaxSavings + churchTaxSavings;
     
     // Cashflow nach Steuern berechnen
     const cashflowAfterTax = cashflowBeforeTax + taxSavings;
@@ -292,6 +399,12 @@ function calculateCashflow() {
     document.getElementById('result-cf-total-income').textContent = formatCurrency(totalTaxableIncome);
     document.getElementById('result-cf-previous-tax').textContent = formatCurrency(previousIncomeTax);
     document.getElementById('result-cf-income-tax').textContent = formatCurrency(newIncomeTax);
+    // Neue Elemente für Kirchensteuer (müssen im HTML hinzugefügt werden)
+    if (document.getElementById('result-cf-previous-church-tax')) {
+        document.getElementById('result-cf-previous-church-tax').textContent = formatCurrency(previousChurchTax);
+        document.getElementById('result-cf-new-church-tax').textContent = formatCurrency(newChurchTax);
+        document.getElementById('result-cf-church-tax-savings').textContent = formatCurrency(churchTaxSavings);
+    }
     document.getElementById('result-cf-tax-savings').textContent = formatCurrency(taxSavings);
     
     // Cashflow-Ergebnisse
@@ -322,8 +435,10 @@ function calculateCashflow() {
         taxableIncome: taxableIncome, // Neues "Ergebnis vor Steuern"
         previousIncome: annualIncome,
         previousTax: previousIncomeTax,
-        newTotalIncome: totalTaxableIncome, // Neues Gesamteinkommen
-        newTax: newIncomeTax, // Neue Gesamtsteuer
+        previousChurchTax: previousChurchTax,
+        newTotalIncome: totalTaxableIncome,
+        newTax: newIncomeTax,
+        newChurchTax: newChurchTax,
         taxSavings: taxSavings,
         cashflow: cashflowAfterTax,
         cashflowBeforeTax: cashflowBeforeTax, // Explizit den Cashflow vor Steuern speichern
@@ -382,13 +497,19 @@ function calculateCashflow() {
         const yearlyMaintenance = year <= purchaseData.maintenanceDistribution ? purchaseData.annualMaintenance : 0;
         const yearlyTotalDepreciation = annualBuildingDepreciation + annualFurnitureDepreciation + yearlyMaintenance;
         
-        // Neues "Ergebnis vor Steuern" berechnen
-        const yearlyTaxableIncome = currentCashflowBeforeTax + yearlyPrincipal - annualBuildingDepreciation - annualFurnitureDepreciation - yearlyMaintenance;
-        
         // Steuerberechnung mit progressivem Steuersatz
+        const yearlyTaxableIncome = currentCashflowBeforeTax + yearlyPrincipal - annualBuildingDepreciation - annualFurnitureDepreciation - yearlyMaintenance;
         const yearlyTotalTaxableIncome = Math.max(0, annualIncome + yearlyTaxableIncome);
-        const yearlyNewIncomeTax = calculateGermanIncomeTax(yearlyTotalTaxableIncome);
-        const yearlyTaxSavings = previousIncomeTax - yearlyNewIncomeTax;
+        const yearlyNewIncomeTax = calculateGermanIncomeTax(yearlyTotalTaxableIncome, taxStatus);
+
+        // Kirchensteuer berechnen (nur wenn aktiviert)
+        const yearlyPreviousChurchTax = hasChurchTax ? calculateChurchTax(previousIncomeTax, hasChurchTax, churchTaxRate) : 0;
+        const yearlyNewChurchTax = hasChurchTax ? calculateChurchTax(yearlyNewIncomeTax, hasChurchTax, churchTaxRate) : 0;
+
+        // Gesamte Steuerersparnis (inkl. Kirchensteuer wenn aktiviert)
+        const yearlyIncomeTaxSavings = previousIncomeTax - yearlyNewIncomeTax;
+        const yearlyChurchTaxSavings = yearlyPreviousChurchTax - yearlyNewChurchTax;
+        const yearlyTaxSavings = yearlyIncomeTaxSavings + yearlyChurchTaxSavings;
         
         // Cashflow nach Steuern
         const yearlyCashflowAfterTax = currentCashflowBeforeTax + yearlyTaxSavings;
@@ -418,11 +539,13 @@ function calculateCashflow() {
             furnitureDepreciation: annualFurnitureDepreciation,
             maintenanceDeduction: yearlyMaintenance,
             totalDepreciation: yearlyTotalDepreciation,
-            taxableIncome: yearlyTaxableIncome, // Neues "Ergebnis vor Steuern"
+            taxableIncome: yearlyTaxableIncome,
             previousIncome: annualIncome,
             previousTax: previousIncomeTax,
-            newTotalIncome: yearlyTotalTaxableIncome, // Neues Gesamteinkommen
-            newTax: yearlyNewIncomeTax, // Neue Gesamtsteuer
+            newTotalIncome: yearlyTotalTaxableIncome, // Stellen Sie sicher, dass dieser Wert korrekt gesetzt wird
+            newTax: yearlyNewIncomeTax,
+            previousChurchTax: yearlyPreviousChurchTax,
+            newChurchTax: yearlyNewChurchTax,
             taxSavings: yearlyTaxSavings,
             cashflow: yearlyCashflowAfterTax,
             cashflowBeforeTax: currentCashflowBeforeTax, // Explizit den Cashflow vor Steuern speichern
@@ -535,6 +658,9 @@ function calculateYearTable() {
     fillDetailRow('tax', 5, (yearData) => yearData.newTotalIncome, false, 'Neues zu versteuerndes Gesamteinkommen');
     fillDetailRow('tax', 6, (yearData) => yearData.previousTax, true);
     fillDetailRow('tax', 7, (yearData) => yearData.newTax, true, 'Einkommensteuer (nachher)');
+    fillDetailRow('tax', 8, (yearData) => yearData.previousChurchTax, true, 'Kirchensteuer (vorher)');
+    fillDetailRow('tax', 9, (yearData) => yearData.newChurchTax, true, 'Kirchensteuer (nachher)');
+
     
     // 7. Steuerersparnis
     fillCategoryRow('tax-savings', (yearData) => yearData.taxSavings);
@@ -805,6 +931,8 @@ function exportTableToCSV() {
     addCsvRow('  Neues zu versteuerndes Gesamteinkommen', (yearData) => yearData.newTotalIncome);
     addCsvRow('  Einkommensteuer (vorher)', (yearData) => yearData.previousTax);
     addCsvRow('  Einkommensteuer (nachher)', (yearData) => yearData.newTax);
+    addCsvRow('  Kirchensteuer (vorher)', (yearData) => yearData.previousChurchTax);
+    addCsvRow('  Kirchensteuer (nachher)', (yearData) => yearData.newChurchTax);
     
     // 7. Steuerersparnis
     addCsvRow('Steuerersparnis', (yearData) => yearData.taxSavings);
