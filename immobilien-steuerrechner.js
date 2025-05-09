@@ -158,14 +158,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Update Grunderwerbsteuer based on Bundesland selection
-    document.getElementById('bundesland').addEventListener('change', function() {
-        document.getElementById('grunderwerbsteuer').value = this.value;
-    });
-
-    // Initial set of Grunderwerbsteuer
-    document.getElementById('grunderwerbsteuer').value = document.getElementById('bundesland').value;
-
     // Handle financing type change
     document.getElementById('financing-type').addEventListener('change', function() {
         const loanDetails = document.getElementById('loan-details');
@@ -269,20 +261,19 @@ function calculateOngoing() {
     const vacancyRate = parseFloat(document.getElementById('vacancy-rate').value);
     const propertyTax = parseFloat(document.getElementById('property-tax').value);
     const managementFee = parseFloat(document.getElementById('management-fee').value);
-    const maintenanceRate = parseFloat(document.getElementById('maintenance-reserve').value);
+    const maintenanceReserve = parseFloat(document.getElementById('maintenance-reserve').value); // Jetzt direkt als Gesamtwert
     const propertySize = parseFloat(document.getElementById('property-size').value);
     const insurance = parseFloat(document.getElementById('insurance').value);
     
     const annualRent = monthlyRent * 12;
     const effectiveRent = annualRent * (1 - vacancyRate / 100);
-    const maintenanceCost = maintenanceRate * propertySize;
-    const totalOngoing = propertyTax + managementFee + maintenanceCost + insurance;
+    const totalOngoing = propertyTax + managementFee + maintenanceReserve + insurance;
     
     document.getElementById('result-annual-rent').textContent = formatCurrency(annualRent);
     document.getElementById('result-effective-rent').textContent = formatCurrency(effectiveRent);
     document.getElementById('result-property-tax').textContent = formatCurrency(propertyTax);
     document.getElementById('result-management').textContent = formatCurrency(managementFee);
-    document.getElementById('result-maintenance').textContent = formatCurrency(maintenanceCost);
+    document.getElementById('result-maintenance').textContent = formatCurrency(maintenanceReserve);
     document.getElementById('result-insurance').textContent = formatCurrency(insurance);
     document.getElementById('result-total-ongoing').textContent = formatCurrency(totalOngoing);
     
@@ -293,7 +284,7 @@ function calculateOngoing() {
         effectiveRent,
         propertyTax,
         managementFee,
-        maintenanceCost,
+        maintenanceCost: maintenanceReserve, // Jetzt direkt der eingegebene Wert
         insurance,
         totalOngoing,
         propertySize
@@ -992,7 +983,8 @@ function toggleDetails(row) {
 // 1. Kaufkosten berechnen
 function calculatePurchase() {
     const purchasePrice = parseFloat(document.getElementById('purchase-price').value);
-    const grunderwerbsteuerRate = parseFloat(document.getElementById('grunderwerbsteuer').value);
+    const bundeslandSelect = document.getElementById('bundesland');
+    const grunderwerbsteuerRate = parseFloat(bundeslandSelect.value);
     const notaryRate = parseFloat(document.getElementById('notary-costs').value);
     const brokerRate = parseFloat(document.getElementById('broker-fee').value);
     

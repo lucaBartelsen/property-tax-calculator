@@ -68,14 +68,6 @@
                         <input type="number" id="broker-fee" step="0.1" value="3">
                     </div>
                     <div class="form-group">
-                        <label for="grunderwerbsteuer">Grunderwerbsteuer (%) 
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Wird automatisch basierend auf dem Bundesland berechnet</span>
-                            </span>
-                        </label>
-                        <input type="number" id="grunderwerbsteuer" step="0.1" disabled>
-                    </div>
-                    <div class="form-group">
                         <label for="property-size">Wohnfläche (m²)</label>
                         <input type="number" id="property-size" value="70">
                     </div>
@@ -184,8 +176,12 @@
                         <input type="number" id="management-fee" value="600">
                     </div>
                     <div class="form-group">
-                        <label for="maintenance-reserve">Instandhaltungsrücklage (€/m² p.a.)</label>
-                        <input type="number" id="maintenance-reserve" step="0.1" value="7.5">
+                        <label for="maintenance-reserve">Instandhaltungsrücklage (€ p.a.)
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Jährliche Rücklagen für zukünftige Instandhaltungsmaßnahmen</span>
+                            </span>
+                        </label>
+                        <input type="number" id="maintenance-reserve" value="600">
                     </div>
                     <div class="form-group">
                         <label for="insurance">Versicherungen (€ p.a.)</label>
