@@ -92,14 +92,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Event-Listener für Grundstücksanteil hinzufügen
-    document.getElementById('land-value-percentage').addEventListener('input', function() {
-        const landValuePercentage = parseFloat(this.value);
-        if (!isNaN(landValuePercentage)) {
-            const buildingValuePercentage = 100 - landValuePercentage;
-            document.getElementById('building-value-percentage').value = buildingValuePercentage.toFixed(1);
+    document.getElementById('purchase-price').addEventListener('input', validatePurchaseAllocation);
+    document.getElementById('land-value').addEventListener('input', validatePurchaseAllocation);
+    document.getElementById('building-value').addEventListener('input', validatePurchaseAllocation);
+    document.getElementById('furniture-value').addEventListener('input', validatePurchaseAllocation);
+
+    // Funktion zur Validierung der Kaufpreisaufteilung
+    function validatePurchaseAllocation() {
+        const purchasePrice = parseFloat(document.getElementById('purchase-price').value);
+        const landValue = parseFloat(document.getElementById('land-value').value);
+        const buildingValue = parseFloat(document.getElementById('building-value').value);
+        const furnitureValue = parseFloat(document.getElementById('furniture-value').value);
+        
+        const totalAllocation = landValue + buildingValue + furnitureValue;
+        const warningElement = document.getElementById('price-validation-warning');
+        
+        if (Math.abs(totalAllocation - purchasePrice) > 1) { // Toleranz von 1€ für Rundungsfehler
+            warningElement.style.display = 'block';
+            warningElement.textContent = `Warnung: Die Summe der Kaufpreisaufteilung (${formatCurrency(totalAllocation)}) entspricht nicht dem Gesamtkaufpreis (${formatCurrency(purchasePrice)})!`;
+        } else {
+            warningElement.style.display = 'none';
         }
-    });
+    }
 
     // Hauptberechnungsfunktion - alle Berechnungen in einem
     document.getElementById('calculate-all').addEventListener('click', function() {
@@ -861,16 +875,29 @@ function calculatePurchase() {
     const totalExtra = grunderwerbsteuer + notaryCosts + brokerFee;
     const totalCost = purchasePrice + totalExtra;
     
-    // Kaufpreisaufteilung berechnen
-    const landValuePercentage = parseFloat(document.getElementById('land-value-percentage').value);
-    const buildingValuePercentage = parseFloat(document.getElementById('building-value-percentage').value);
+    // Kaufpreisaufteilung direkt als Werte einlesen
+    const landValue = parseFloat(document.getElementById('land-value').value);
+    const buildingValue = parseFloat(document.getElementById('building-value').value);
     const maintenanceCost = parseFloat(document.getElementById('maintenance-cost').value);
     const furnitureValue = parseFloat(document.getElementById('furniture-value').value);
     const maintenanceDistribution = parseInt(document.getElementById('maintenance-distribution').value);
     
-    const landValue = purchasePrice * (landValuePercentage / 100);
-    const buildingValue = purchasePrice * (buildingValuePercentage / 100);
     const annualMaintenance = maintenanceCost / maintenanceDistribution;
+    
+    // Summe der Kaufpreisaufteilung prüfen und Warnung anzeigen, wenn nötig
+    const totalAllocation = landValue + buildingValue + furnitureValue;
+    const warningElement = document.getElementById('price-validation-warning');
+    
+    if (Math.abs(totalAllocation - purchasePrice) > 1) { // Toleranz von 1€ für Rundungsfehler
+        warningElement.style.display = 'block';
+        warningElement.textContent = `Warnung: Die Summe der Kaufpreisaufteilung (${formatCurrency(totalAllocation)}) entspricht nicht dem Gesamtkaufpreis (${formatCurrency(purchasePrice)})!`;
+    } else {
+        warningElement.style.display = 'none';
+    }
+    
+    // Prozentuale Anteile berechnen (für mögliche Verwendung im Code)
+    const landValuePercentage = (landValue / purchasePrice) * 100;
+    const buildingValuePercentage = (buildingValue / purchasePrice) * 100;
     
     // Kaufpreisaufteilung anzeigen
     document.getElementById('result-purchase-price').textContent = formatCurrency(purchasePrice);
@@ -885,8 +912,7 @@ function calculatePurchase() {
     document.getElementById('result-furniture-value').textContent = formatCurrency(furnitureValue);
     document.getElementById('result-annual-maintenance').textContent = formatCurrency(annualMaintenance);
     
-    // Gebäudewert im Abschreibungsbereich aktualisieren
-    document.getElementById('building-value').value = buildingValue.toFixed(0);
+    // Gebäudewert wird nicht mehr separat gesetzt, da er direkt aus der Kaufpreisaufteilung kommt
     
     return {
         purchasePrice,
@@ -900,6 +926,8 @@ function calculatePurchase() {
         maintenanceCost,
         furnitureValue,
         annualMaintenance,
-        maintenanceDistribution
+        maintenanceDistribution,
+        landValuePercentage,
+        buildingValuePercentage
     };
 }

@@ -83,20 +83,20 @@
                 <div class="card">
                     <h2>Kaufpreisaufteilung</h2>
                     <div class="form-group">
-                        <label for="land-value-percentage">Grundstücksanteil (%)
+                        <label for="land-value">Grundstücksanteil (€)
                             <span class="tooltip">?
-                                <span class="tooltiptext">Anteil des Grundstücks am Gesamtkaufpreis</span>
+                                <span class="tooltiptext">Wert des Grundstücks vom Gesamtkaufpreis</span>
                             </span>
                         </label>
-                        <input type="number" id="land-value-percentage" step="0.1" value="15.0">
+                        <input type="number" id="land-value" value="45000">
                     </div>
                     <div class="form-group">
-                        <label for="building-value-percentage">Gebäudeanteil (%)
+                        <label for="building-value">Gebäudeanteil (€)
                             <span class="tooltip">?
-                                <span class="tooltiptext">Anteil des Gebäudes am Gesamtkaufpreis</span>
+                                <span class="tooltiptext">Wert des Gebäudes vom Gesamtkaufpreis</span>
                             </span>
                         </label>
-                        <input type="number" id="building-value-percentage" step="0.1" value="85.0" disabled>
+                        <input type="number" id="building-value" value="255000">
                     </div>
                     <div class="form-group">
                         <label for="maintenance-cost">Erhaltungsaufwand (€)
@@ -127,6 +127,9 @@
                             <option value="4">Auf 4 Jahre verteilen</option>
                             <option value="5">Auf 5 Jahre verteilen</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="price-validation-warning" style="color: red; display: none;">
+                        Warnung: Die Summe der Kaufpreisaufteilung entspricht nicht dem Gesamtkaufpreis!
                     </div>
                 </div>
                 
@@ -218,14 +221,6 @@
                             </span>
                         </label>
                         <input type="number" id="depreciation-rate" step="0.1" value="2.0">
-                    </div>
-                    <div class="form-group">
-                        <label for="building-value">Gebäudewert (€)
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Der steuerlich absetzbare Gebäudewert (ohne Grundstück)</span>
-                            </span>
-                        </label>
-                        <input type="number" id="building-value" value="240000">
                     </div>
                     <div class="form-group">
                         <label for="furniture-depreciation-rate">AfA-Satz Möbel (% p.a.)
