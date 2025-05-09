@@ -226,7 +226,6 @@ function calculateCashflow() {
     const financingType = document.getElementById('financing-type').value;
     const downPayment = parseFloat(document.getElementById('down-payment').value);
     const interestRate = parseFloat(document.getElementById('interest-rate').value) / 100;
-    const loanTerm = parseFloat(document.getElementById('loan-term').value);
     const repaymentRate = parseFloat(document.getElementById('repayment-rate').value) / 100;
     
     // Steuer- und Abschreibungsdaten
