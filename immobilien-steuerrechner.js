@@ -128,6 +128,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+document.getElementById('broker-as-consulting').addEventListener('change', function() {
+    const brokerConsultingRows = document.querySelectorAll('[data-broker-consulting="true"]');
+    brokerConsultingRows.forEach(row => {
+        row.style.display = this.checked ? '' : 'none';
+    });
+    
+    // Bei Änderung Neuberechnung auslösen
+    calculatePurchase();
+    calculateCashflow();
+    calculateYearTable();
+});
+
 // Function to format currency
 function formatCurrency(value) {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
@@ -305,6 +317,7 @@ function calculateCashflow() {
     
     // Steuer- und Abschreibungsdaten
     const taxInfo = calculateTaxInfo(); // Ruft die neue Funktion auf, um alle Steuerinfos zu bekommen
+    const firstYearAdditionalCosts = purchaseData.firstYearDeductibleCosts;
     const annualIncome = taxInfo.annualIncome;
     const taxStatus = taxInfo.taxStatus;
     const hasChurchTax = taxInfo.hasChurchTax;
@@ -352,9 +365,32 @@ function calculateCashflow() {
     // Cashflow vor Steuern berechnen
     const cashflowBeforeTax = ongoingData.effectiveRent - ongoingData.totalOngoing - yearlyFinancingCosts;
     
-    // Neues "Ergebnis vor Steuern" berechnen (vormals "Zu versteuerndes Einkommen")
-    const taxableIncome = cashflowBeforeTax + yearlyPrincipal - annualBuildingDepreciation - annualFurnitureDepreciation - purchaseData.annualMaintenance;
+// Maklerkosten als Beratungsleistung berücksichtigen
+    const brokerAsConsulting = document.getElementById('broker-as-consulting').checked;
+    const brokerConsultingCosts = brokerAsConsulting ? purchaseData.brokerFee : 0;
     
+    // Abschreibungsinformationen anzeigen und Element ein-/ausblenden
+    document.getElementById('result-cf-building-depreciation').textContent = formatCurrency(annualBuildingDepreciation);
+    document.getElementById('result-cf-furniture-depreciation').textContent = formatCurrency(annualFurnitureDepreciation);
+    document.getElementById('result-cf-maintenance-deduction').textContent = formatCurrency(purchaseData.annualMaintenance);
+    
+    // Maklerkosten als Beratungsleistung Element ein-/ausblenden
+    const brokerConsultingItem = document.getElementById('broker-consulting-item');
+    if (brokerConsultingItem) {
+        if (brokerAsConsulting) {
+            brokerConsultingItem.style.display = 'flex'; // oder 'block', je nach Styling
+            document.getElementById('result-cf-broker-consulting').textContent = formatCurrency(brokerConsultingCosts);
+        } else {
+            brokerConsultingItem.style.display = 'none';
+        }
+    }
+    
+    // Gesamte steuerliche Abschreibung inkl. Maklerkosten als Beratungsleistung
+    const totalDepreciation = annualBuildingDepreciation + annualFurnitureDepreciation + purchaseData.annualMaintenance + brokerConsultingCosts;
+
+    // Anpassung des zu versteuernden Einkommens
+    const taxableIncome = cashflowBeforeTax + yearlyPrincipal - annualBuildingDepreciation - annualFurnitureDepreciation - purchaseData.annualMaintenance - brokerConsultingCosts;
+      
     // Steuerberechnung mit progressivem Steuersatz
     const previousIncomeTax = calculateGermanIncomeTax(annualIncome, taxStatus);
     const totalTaxableIncome = Math.max(0, annualIncome + taxableIncome);
@@ -382,7 +418,7 @@ function calculateCashflow() {
     document.getElementById('result-cf-building-depreciation').textContent = formatCurrency(annualBuildingDepreciation);
     document.getElementById('result-cf-furniture-depreciation').textContent = formatCurrency(annualFurnitureDepreciation);
     document.getElementById('result-cf-maintenance-deduction').textContent = formatCurrency(purchaseData.annualMaintenance);
-    document.getElementById('result-cf-total-depreciation').textContent = formatCurrency(annualBuildingDepreciation + annualFurnitureDepreciation + purchaseData.annualMaintenance);
+    document.getElementById('result-cf-total-depreciation').textContent = formatCurrency(totalDepreciation);
     
     // Steuerinformationen
     document.getElementById('result-cf-taxable-income').textContent = formatCurrency(taxableIncome);
@@ -422,8 +458,9 @@ function calculateCashflow() {
         buildingDepreciation: annualBuildingDepreciation,
         furnitureDepreciation: annualFurnitureDepreciation,
         maintenanceDeduction: purchaseData.annualMaintenance,
-        totalDepreciation: annualBuildingDepreciation + annualFurnitureDepreciation + purchaseData.annualMaintenance,
+        totalDepreciation: totalDepreciation,
         taxableIncome: taxableIncome, // Neues "Ergebnis vor Steuern"
+        firstYearDeductibleCosts: firstYearAdditionalCosts,
         previousIncome: annualIncome,
         previousTax: previousIncomeTax,
         previousChurchTax: previousChurchTax,
@@ -487,6 +524,9 @@ function calculateCashflow() {
         // Erhaltungsaufwand nur für die ausgewählten Jahre berücksichtigen
         const yearlyMaintenance = year <= purchaseData.maintenanceDistribution ? purchaseData.annualMaintenance : 0;
         const yearlyTotalDepreciation = annualBuildingDepreciation + annualFurnitureDepreciation + yearlyMaintenance;
+
+        // Ab dem zweiten Jahr keine zusätzlichen Kosten mehr
+        const yearlyFirstYearDeductibleCosts = 0;
         
         // Steuerberechnung mit progressivem Steuersatz
         const yearlyTaxableIncome = currentCashflowBeforeTax + yearlyPrincipal - annualBuildingDepreciation - annualFurnitureDepreciation - yearlyMaintenance;
@@ -530,6 +570,7 @@ function calculateCashflow() {
             furnitureDepreciation: annualFurnitureDepreciation,
             maintenanceDeduction: yearlyMaintenance,
             totalDepreciation: yearlyTotalDepreciation,
+            firstYearDeductibleCosts: yearlyFirstYearDeductibleCosts, // Immer 0 ab Jahr 2
             taxableIncome: yearlyTaxableIncome,
             previousIncome: annualIncome,
             previousTax: previousIncomeTax,
@@ -644,13 +685,19 @@ function calculateYearTable() {
     fillDetailRow('tax', 0, (yearData) => yearData.buildingDepreciation, true);
     fillDetailRow('tax', 1, (yearData) => yearData.furnitureDepreciation, true);
     fillDetailRow('tax', 2, (yearData) => yearData.maintenanceDeduction, true);
-    fillDetailRow('tax', 3, (yearData) => yearData.taxableIncome, false, 'Ergebnis vor Steuern');
-    fillDetailRow('tax', 4, (yearData) => yearData.previousIncome);
-    fillDetailRow('tax', 5, (yearData) => yearData.newTotalIncome, false, 'Neues zu versteuerndes Gesamteinkommen');
-    fillDetailRow('tax', 6, (yearData) => yearData.previousTax, true);
-    fillDetailRow('tax', 7, (yearData) => yearData.newTax, true, 'Einkommensteuer (nachher)');
-    fillDetailRow('tax', 8, (yearData) => yearData.previousChurchTax, true, 'Kirchensteuer (vorher)');
-    fillDetailRow('tax', 9, (yearData) => yearData.newChurchTax, true, 'Kirchensteuer (nachher)');
+    if (document.getElementById('broker-as-consulting').checked) {
+        fillDetailRow('tax', 3, (yearData) => yearData.firstYearDeductibleCosts, true, 'Maklerkosten als Beratungsleistung');
+        fillDetailRow('tax', 4, (yearData) => yearData.taxableIncome, false, 'Ergebnis vor Steuern');
+        fillDetailRow('tax', 5, (yearData) => yearData.previousIncome);
+        fillDetailRow('tax', 6, (yearData) => yearData.newTotalIncome, false, 'Neues zu versteuerndes Gesamteinkommen');
+        fillDetailRow('tax', 7, (yearData) => yearData.previousTax, true);
+        fillDetailRow('tax', 8, (yearData) => yearData.newTax, true, 'Einkommensteuer (nachher)');
+        fillDetailRow('tax', 9, (yearData) => yearData.previousChurchTax, true, 'Kirchensteuer (vorher)');
+        fillDetailRow('tax', 10, (yearData) => yearData.newChurchTax, true, 'Kirchensteuer (nachher)');
+    } else {
+        // Original-Indizes beibehalten, wenn nicht aktiviert
+        fillDetailRow('tax', 3, (yearData) => yearData.taxableIncome, false, 'Ergebnis vor Steuern');
+    }
 
     
     // 7. Steuerersparnis
@@ -987,19 +1034,38 @@ function calculatePurchase() {
     const grunderwerbsteuerRate = parseFloat(bundeslandSelect.value);
     const notaryRate = parseFloat(document.getElementById('notary-costs').value);
     const brokerRate = parseFloat(document.getElementById('broker-fee').value);
+    const brokerAsConsulting = document.getElementById('broker-as-consulting').checked;
     
+    // Berechnung der Kaufnebenkosten
     const grunderwerbsteuer = purchasePrice * (grunderwerbsteuerRate / 100);
     const notaryCosts = purchasePrice * (notaryRate / 100);
     const brokerFee = purchasePrice * (brokerRate / 100);
     const totalExtra = grunderwerbsteuer + notaryCosts + brokerFee;
     const totalCost = purchasePrice + totalExtra;
     
-    // Kaufpreisaufteilung direkt als Werte einlesen
+    // Kaufpreisaufteilung
     const landValue = parseFloat(document.getElementById('land-value').value);
     const buildingValue = parseFloat(document.getElementById('building-value').value);
     const maintenanceCost = parseFloat(document.getElementById('maintenance-cost').value);
     const furnitureValue = parseFloat(document.getElementById('furniture-value').value);
     const maintenanceDistribution = parseInt(document.getElementById('maintenance-distribution').value);
+    
+    // Prozentuale Anteile berechnen
+    const landValuePercentage = (landValue / purchasePrice) * 100;
+    const buildingValuePercentage = (buildingValue / purchasePrice) * 100;
+    
+    // Anschaffungsnebenkosten anteilig auf Grund und Gebäude aufteilen
+    // Wenn Maklerkosten als Beratung, dann nicht in Anschaffungskosten einbeziehen
+    const relevantExtra = brokerAsConsulting ? (grunderwerbsteuer + notaryCosts) : totalExtra;
+    const landExtraCosts = relevantExtra * (landValue / purchasePrice);
+    const buildingExtraCosts = relevantExtra * (buildingValue / purchasePrice);
+    
+    // Gesamtwerte für Grund und Gebäude inklusive anteiliger Kaufnebenkosten
+    const totalLandValue = landValue + landExtraCosts;
+    const totalBuildingValue = buildingValue + buildingExtraCosts;
+    
+    // Berechnung für sofort absetzbare Kosten im ersten Jahr
+    const firstYearDeductibleCosts = brokerAsConsulting ? brokerFee : 0;
     
     const annualMaintenance = maintenanceCost / maintenanceDistribution;
     
@@ -1013,10 +1079,6 @@ function calculatePurchase() {
     } else {
         warningElement.style.display = 'none';
     }
-    
-    // Prozentuale Anteile berechnen (für mögliche Verwendung im Code)
-    const landValuePercentage = (landValue / purchasePrice) * 100;
-    const buildingValuePercentage = (buildingValue / purchasePrice) * 100;
     
     // Kaufpreisaufteilung anzeigen
     document.getElementById('result-purchase-price').textContent = formatCurrency(purchasePrice);
@@ -1038,10 +1100,16 @@ function calculatePurchase() {
         grunderwerbsteuer,
         notaryCosts,
         brokerFee,
+        brokerAsConsulting,
+        firstYearDeductibleCosts,
         totalExtra,
         totalCost,
         landValue,
         buildingValue,
+        landExtraCosts,
+        buildingExtraCosts,
+        totalLandValue,
+        totalBuildingValue,
         maintenanceCost,
         furnitureValue,
         annualMaintenance,

@@ -68,6 +68,15 @@
                         <input type="number" id="broker-fee" step="0.1" value="3">
                     </div>
                     <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="broker-as-consulting" checked>
+                            Maklerkosten als Beratungsleistung (sofortige Absetzung im 1. Jahr)
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Bei entsprechender Vertragsgestaltung können Maklerleistungen ggf. als Beratungsleistung deklariert und sofort abgesetzt werden</span>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="form-group">
                         <label for="property-size">Wohnfläche (m²)</label>
                         <input type="number" id="property-size" value="70">
                     </div>
@@ -378,6 +387,10 @@
                             <div>Jährlicher Erhaltungsaufwand</div>
                             <div id="result-cf-maintenance-deduction">0 €</div>
                         </div>
+                        <div class="depreciation-item" id="broker-consulting-item" style="display: none;">
+                            <div>Maklerkosten als Beratungsleistung</div>
+                            <div id="result-cf-broker-consulting">0 €</div>
+                        </div>
                         <div class="depreciation-item depreciation-total">
                             <div>Gesamte steuerliche Abschreibung</div>
                             <div id="result-cf-total-depreciation">0 €</div>
@@ -547,6 +560,10 @@
                             </tr>
                             <tr class="detail-row" data-category="tax">
                                 <td class="detail-label">Erhaltungsaufwand</td>
+                                <!-- Wird durch JavaScript mit Werten gefüllt -->
+                            </tr>
+                            <tr class="detail-row" data-category="tax" data-broker-consulting="true" style="display: none;">
+                                <td class="detail-label">Maklerkosten als Beratungsleistung</td>
                                 <!-- Wird durch JavaScript mit Werten gefüllt -->
                             </tr>
                             <tr class="detail-row" data-category="tax">
