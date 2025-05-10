@@ -167,6 +167,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add active class to current tab and content
             tab.classList.add('active');
             document.getElementById(tabId).classList.add('active');
+            const brokerAsConsultingCheckbox = document.getElementById('broker-as-consulting');
+            if (brokerAsConsultingCheckbox) {
+                const brokerConsultingRows = document.querySelectorAll('[data-broker-consulting="true"]');
+                brokerConsultingRows.forEach(row => {
+                    row.style.display = brokerAsConsultingCheckbox.checked ? '' : 'none';
+                });
+            }
         });
     });
 
