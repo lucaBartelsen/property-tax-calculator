@@ -77,8 +77,12 @@
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="property-size">Wohnfläche (m²)</label>
-                        <input type="number" id="property-size" value="70">
+                        <label for="depreciation-rate">AfA-Satz (% p.a.)
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Normalerweise 2% für Gebäude ab 2023</span>
+                            </span>
+                        </label>
+                        <input type="number" id="depreciation-rate" step="0.1" value="2.0">
                     </div>
                 </div>
                 <!-- Karte: Kaufpreisaufteilung -->
@@ -683,26 +687,6 @@
                         </span>
                     </label>
                     <input type="number" id="tax-rate" step="0.1" value="42.0" disabled>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>Immobilien-Abschreibung</h2>
-                <div class="form-group">
-                    <label for="depreciation-rate">AfA-Satz (% p.a.)
-                        <span class="tooltip">?
-                            <span class="tooltiptext">Normalerweise 2% für Gebäude ab 2023</span>
-                        </span>
-                    </label>
-                    <input type="number" id="depreciation-rate" step="0.1" value="2.0">
-                </div>
-                <div class="form-group">
-                    <label for="furniture-depreciation-rate">AfA-Satz Möbel (% p.a.)
-                        <span class="tooltip">?
-                            <span class="tooltiptext">Normalerweise 10% für Möbel und Einrichtung</span>
-                        </span>
-                    </label>
-                    <input type="number" id="furniture-depreciation-rate" step="0.1" value="10.0">
                 </div>
             </div>
             

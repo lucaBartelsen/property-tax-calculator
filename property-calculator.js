@@ -119,7 +119,6 @@ export function calculateOngoing() {
   const propertyTax = parseFloat(document.getElementById('property-tax').value);
   const managementFee = parseFloat(document.getElementById('management-fee').value);
   const maintenanceReserve = parseFloat(document.getElementById('maintenance-reserve').value);
-  const propertySize = parseFloat(document.getElementById('property-size').value);
   const insurance = parseFloat(document.getElementById('insurance').value);
   
   // Calculate annual values
@@ -146,8 +145,7 @@ export function calculateOngoing() {
     managementFee,
     maintenanceCost: maintenanceReserve,
     insurance,
-    totalOngoing,
-    propertySize
+    totalOngoing
   };
   
   return window.calculationState.ongoingData;

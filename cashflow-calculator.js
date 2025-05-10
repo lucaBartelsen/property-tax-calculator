@@ -26,7 +26,7 @@ export function calculateCashflow() {
   const depreciationRate = parseFloat(document.getElementById('depreciation-rate').value) / 100;
   const buildingValue = parseFloat(document.getElementById('building-value').value);
   const furnitureValue = parseFloat(document.getElementById('furniture-value').value);
-  const furnitureDepreciationRate = parseFloat(document.getElementById('furniture-depreciation-rate').value) / 100;
+  const furnitureDepreciationRate = 0.10; // Fest auf 10% gesetzt
   
   // Get projection details
   const appreciationRate = parseFloat(document.getElementById('expected-appreciation').value) / 100;
