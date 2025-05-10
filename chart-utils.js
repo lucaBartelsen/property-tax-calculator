@@ -90,6 +90,7 @@ export function createCashflowChart(years, cashflows, propertyValues, equityValu
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         scales: {
           y: {
             beginAtZero: true,

@@ -62,6 +62,16 @@ function initEventListeners() {
   // Broker as consulting toggle
   document.getElementById('broker-as-consulting').addEventListener('change', handleBrokerToggle);
   
+  document.getElementById('calculation-period').addEventListener('change', function() {
+    document.getElementById('update-calculations').click();
+  });
+
+  document.getElementById('update-calculations').addEventListener('click', function() {
+    calculateCashflow();
+    calculateYearTable();
+    calculateSummary();
+  });
+
   // Main calculation button
   document.getElementById('calculate-all').addEventListener('click', function() {
     calculatePurchase();

@@ -10,7 +10,13 @@
 <body>
     <h1>Immobilien-Steuerrechner Deutschland</h1>
     <p>Berechnen Sie Steuern, Kosten und Cashflow für Ihre Immobilieninvestition in Deutschland.</p>
-    
+    <div class="global-settings-bar">
+        <div class="global-setting">
+            <label for="calculation-period">Betrachtungszeitraum (Jahre):</label>
+            <input type="number" id="calculation-period" value="10" min="1" max="50">
+        </div>
+        <button id="update-calculations" class="update-button">Berechnungen aktualisieren</button>
+    </div>
     <div class="tab-container">
         <div class="tabs">
             <div class="tab active" data-tab="input">Immobiliendaten</div>
@@ -212,10 +218,6 @@
                     <div class="form-group">
                         <label for="expected-rent-increase">Jährliche Mietsteigerung (%)</label>
                         <input type="number" id="expected-rent-increase" step="0.1" value="1.5">
-                    </div>
-                    <div class="form-group">
-                        <label for="calculation-period">Betrachtungszeitraum (Jahre)</label>
-                        <input type="number" id="calculation-period" value="10">
                     </div>
                 </div>
             </div>
@@ -454,7 +456,7 @@
                     </div>
                 </div>
                 
-                <div class="chart-container" style="position: relative; height: 300px; width: 100%; margin-top: 20px;">
+                <div class="chart-container">
                     <canvas id="cashflowChart"></canvas>
                 </div>
             </div>
